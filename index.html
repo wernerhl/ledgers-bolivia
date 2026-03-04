@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledgers of the Self-Employed — Bolivia Informal Firm Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:      #1a1a1a;
+    --paper:    #f5f0e8;
+    --cream:    #ede8de;
+    --rule:     #c8c0b0;
+    --red:      #c0392b;
+    --green:    #27ae60;
+    --amber:    #e67e22;
+    --blue:     #2980b9;
+    --purple:   #8e44ad;
+    --col-viable:   #27ae60;
+    --col-precaria: #e67e22;
+    --col-critica:  #c0392b;
+    --col-atrapada: #8e44ad;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2.5rem 3rem 2rem;
+    border-bottom: 3px solid var(--red);
+  }
+  header .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rule);
+    margin-bottom: 0.6rem;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 0.5rem;
+  }
+  header .subtitle {
+    font-size: 0.88rem;
+    color: #aaa;
+    font-style: italic;
+    max-width: 700px;
+  }
+  header .meta {
+    margin-top: 1.2rem;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  header .meta-pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--paper);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 0.25rem 0.7rem;
+    border-radius: 2px;
+  }
+
+  /* ── FILTERS ── */
+  .filter-bar {
+    background: var(--cream);
+    border-bottom: 1px solid var(--rule);
+    padding: 1rem 3rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .filter-bar label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #666;
+    margin-right: 0.3rem;
+  }
+  .filter-bar select, .filter-bar input[type=range] {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.82rem;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    color: var(--ink);
+    padding: 0.3rem 0.5rem;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .filter-bar select:focus { border-color: var(--blue); }
+  #n-firms-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--red);
+    font-weight: 500;
+    min-width: 80px;
+  }
+  .filter-group { display: flex; align-items: center; gap: 0.4rem; }
+  .reset-btn {
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: #666;
+    padding: 0.3rem 0.8rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── MAIN LAYOUT ── */
+  main { padding: 2rem 3rem; max-width: 1600px; margin: 0 auto; }
+
+  /* ── SECTION HEADERS ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-top: 2px solid var(--ink);
+    padding-top: 0.5rem;
+    margin: 2.5rem 0 1.2rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+  }
+  .section-title .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--red);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── STAT CARDS ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--paper);
+    padding: 1.1rem 1.2rem;
+    position: relative;
+  }
+  .stat-card .stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.67rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 0.4rem;
+  }
+  .stat-card .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .stat-card .stat-sub {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.25rem;
+  }
+  .stat-card.red .stat-value { color: var(--red); }
+  .stat-card.green .stat-value { color: var(--green); }
+  .stat-card.amber .stat-value { color: var(--amber); }
+  .stat-card.blue .stat-value { color: var(--blue); }
+
+  /* ── CHART GRID ── */
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .chart-grid-1 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 1100px) {
+    .chart-grid-2, .chart-grid-3 { grid-template-columns: 1fr; }
+    main { padding: 1.2rem 1.5rem; }
+    .filter-bar { padding: 0.8rem 1.5rem; }
+    header { padding: 1.5rem; }
+  }
+
+  .chart-box {
+    background: white;
+    border: 1px solid var(--rule);
+    padding: 1rem;
+  }
+  .chart-box .chart-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--cream);
+  }
+  .chart-box .chart-note {
+    font-size: 0.72rem;
+    color: #999;
+    font-style: italic;
+    margin-top: 0.5rem;
+  }
+
+  /* ── FIRM EXPLORER TABLE ── */
+  .table-wrapper { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+  thead th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.67rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: right;
+    padding: 0.5rem 0.7rem;
+    background: var(--cream);
+    border-bottom: 2px solid var(--ink);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:first-child, thead th:nth-child(2), thead th:nth-child(3) { text-align: left; }
+  thead th:hover { color: var(--blue); }
+  tbody tr { border-bottom: 1px solid var(--cream); transition: background 0.1s; }
+  tbody tr:hover { background: #fffff0; }
+  tbody td {
+    padding: 0.45rem 0.7rem;
+    text-align: right;
+    font-feature-settings: "tnum";
+  }
+  tbody td:first-child, tbody td:nth-child(2), tbody td:nth-child(3) { text-align: left; }
+  .badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .badge-viable   { background: #d5f0df; color: #1a6e3a; }
+  .badge-precaria { background: #fde8cc; color: #7a3e00; }
+  .badge-critica  { background: #fcd5d0; color: #7a1010; }
+  .badge-atrapada { background: #e8d5f0; color: #4a1a6e; }
+  .pos { color: var(--green); font-weight: 500; }
+  .neg { color: var(--red);   font-weight: 500; }
+
+  /* ── LEGEND ── */
+  .typology-legend {
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding: 0.8rem 1rem;
+    background: var(--cream);
+    border: 1px solid var(--rule);
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── FOOTNOTE ── */
+  footer {
+    margin-top: 3rem;
+    padding: 1.5rem 3rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.75rem;
+    color: #888;
+    font-style: italic;
+  }
+  footer a { color: var(--blue); }
+
+  /* ── LOADING ── */
+  #loading {
+    position: fixed; inset: 0;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999;
+    gap: 1rem;
+  }
+  #loading .load-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--ink);
+  }
+  #loading .load-bar {
+    width: 200px; height: 3px;
+    background: var(--cream);
+    position: relative; overflow: hidden;
+  }
+  #loading .load-bar::after {
+    content: '';
+    position: absolute; top: 0; left: -50%;
+    width: 50%; height: 100%;
+    background: var(--red);
+    animation: slide 1s ease-in-out infinite;
+  }
+  @keyframes slide {
+    0%   { left: -50%; }
+    100% { left: 100%; }
+  }
+
+  /* ── TAX SLIDER ── */
+  .tax-panel {
+    background: white;
+    border: 1px solid var(--rule);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .tax-panel .tax-header {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--cream);
+  }
+  .tax-controls { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+  .tax-result {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    background: var(--cream);
+    border-left: 3px solid var(--red);
+  }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-title">Ledgers of the Self-Employed</div>
+  <div class="load-bar"></div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:#888">Loading 300 firms · 14,902 transactions…</div>
+</div>
+
+<header>
+  <div class="kicker">Research Dashboard · Informal Firm Accounting · Bolivia 2025</div>
+  <h1>Ledgers of the Self-Employed<br><em style="font-weight:400;font-size:0.75em">Accounting for the Invisible Firm</em></h1>
+  <div class="subtitle">Seven-day financial diary with full double-entry accounting across 300 informal firms in La Paz/El Alto, Cochabamba, Santa Cruz, and Tarija. Explore how the profit picture changes when owner labour, depreciation, and informal debt are correctly accounted for.</div>
+  <div class="meta">
+    <span class="meta-pill">N = 300 firms</span>
+    <span class="meta-pill">14,902 transactions</span>
+    <span class="meta-pill">6 sectors · 4 cities</span>
+    <span class="meta-pill">Shadow wage: Bs 13.64/hr</span>
+    <span class="meta-pill">Hernani-Limarino (2026)</span>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Sector</label>
+    <select id="f-sector">
+      <option value="">All sectors</option>
+      <option value="Commerce">Commerce</option>
+      <option value="Manufacturing">Manufacturing</option>
+      <option value="Transport">Transport</option>
+      <option value="Food service">Food service</option>
+      <option value="Other services">Other services</option>
+      <option value="Admin &amp; support">Admin &amp; support</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>City</label>
+    <select id="f-city">
+      <option value="">All cities</option>
+      <option value="La Paz">La Paz/El Alto</option>
+      <option value="Cochabamba">Cochabamba</option>
+      <option value="Santa Cruz">Santa Cruz</option>
+      <option value="Tarija">Tarija</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Gender</label>
+    <select id="f-gender">
+      <option value="">All</option>
+      <option value="F">Female</option>
+      <option value="M">Male</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Typology</label>
+    <select id="f-type">
+      <option value="">All</option>
+      <option value="I_Viable">I — Viable</option>
+      <option value="II_Precaria">II — Precaria</option>
+      <option value="IV_Riesgo_critico">IV — Critical risk</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Poverty</label>
+    <select id="f-poor">
+      <option value="">All</option>
+      <option value="true">Poor</option>
+      <option value="false">Non-poor</option>
+    </select>
+  </div>
+  <span id="n-firms-label">300 firms</span>
+  <button class="reset-btn" onclick="resetFilters()">↺ Reset</button>
+</div>
+
+<main>
+
+  <!-- ── §1 HEADLINE STATS ── -->
+  <div class="section-title"><span class="num">§1</span> Headline Statistics</div>
+  <div class="stat-grid" id="stat-grid"></div>
+
+  <!-- ── §2 THE PROFIT REVERSAL ── -->
+  <div class="section-title"><span class="num">§2</span> The Profit Reversal</div>
+  <div class="typology-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--col-viable)"></div> I — Viable (positive adjusted profit, low debt)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--col-precaria)"></div> II — Precaria (negative profit, low debt — disguised unemployment)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--col-atrapada)"></div> III — Debt-trapped (positive profit, high debt)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--col-critica)"></div> IV — Critical risk (negative profit, high debt)</div>
+  </div>
+  <div class="chart-grid-2">
+    <div class="chart-box">
+      <div class="chart-title">Distribution of adjusted net income (Bs/week)</div>
+      <div id="chart-dist"></div>
+      <div class="chart-note">Red = loss-making (adjusted net income &lt; 0). Blue = profitable after full cost accounting.</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">% profitable by sector — conventional vs adjusted</div>
+      <div id="chart-sector-pct"></div>
+      <div class="chart-note">Conventional: 100% positive. Adjusted: 43% positive on average.</div>
+    </div>
+  </div>
+  <div class="chart-grid-2">
+    <div class="chart-box">
+      <div class="chart-title">Accounting gap decomposition (median, Bs/week)</div>
+      <div id="chart-waterfall"></div>
+      <div class="chart-note">Imputed labour drives 88% of the gap between survey-implied and diary-adjusted profit.</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Firm typology composition by sector</div>
+      <div id="chart-typology-sector"></div>
+    </div>
+  </div>
+
+  <!-- ── §3 FIRM SCATTER ── -->
+  <div class="section-title"><span class="num">§3</span> Firm Map — Profit vs Debt Burden</div>
+  <div class="chart-grid-1">
+    <div class="chart-box">
+      <div class="chart-title">Each point = one firm · adjusted net income vs interest burden · size = weekly hours</div>
+      <div id="chart-scatter" style="height:480px"></div>
+      <div class="chart-note">Hover over any firm for full details. Dotted line = minimum wage equivalent weekly earnings.</div>
+    </div>
+  </div>
+
+  <!-- ── §4 PERSISTENCE MECHANISMS ── -->
+  <div class="section-title"><span class="num">§4</span> Why Loss-Making Firms Persist</div>
+  <div class="chart-grid-3">
+    <div class="chart-box">
+      <div class="chart-title">Cash flow vs adjusted net income (loss-making firms only)</div>
+      <div id="chart-cf-vs-ni"></div>
+      <div class="chart-note">100% of loss-making firms have positive operating cash flow. The loss is entirely non-cash.</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Hourly adjusted return distribution (Bs/hour)</div>
+      <div id="chart-hourly"></div>
+      <div class="chart-note">Red = negative hourly return. Orange = below minimum wage. Green = above minimum wage.</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Household extraction rate (% of weekly revenue)</div>
+      <div id="chart-extraction"></div>
+      <div class="chart-note">All 300 firms make daily household draws. The firm is the household's primary liquid asset.</div>
+    </div>
+  </div>
+
+  <!-- ── §5 SURVEY VS DIARY ── -->
+  <div class="section-title"><span class="num">§5</span> Survey vs Diary — The Measurement Gap</div>
+  <div class="chart-grid-2">
+    <div class="chart-box">
+      <div class="chart-title">EH survey vs diary adjusted annual net income (Bs)</div>
+      <div id="chart-eh-vs-diary"></div>
+      <div class="chart-note">Points above the 45° line: diary income &gt; EH income. Points below: survey overstates true income. Colour = typology.</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Diary-to-EH income ratio by sector</div>
+      <div id="chart-ratio-sector"></div>
+      <div class="chart-note">Ratio &gt; 1: diary detects more income. Ratio &lt; 1: survey overstates net income (cost omission dominates).</div>
+    </div>
+  </div>
+
+  <!-- ── §6 FINANCIAL RATIOS ── -->
+  <div class="section-title"><span class="num">§6</span> Financial Ratios & Going-Concern Value</div>
+  <div class="chart-grid-3">
+    <div class="chart-box">
+      <div class="chart-title">Return on assets — conventional vs adjusted (annualised %)</div>
+      <div id="chart-roa"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Tobin's Q distribution (viable firms only)</div>
+      <div id="chart-tobin"></div>
+      <div class="chart-note">Q = going-concern PV / book assets. Median = 83×. Captures invisible capital: location, clients, know-how.</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Debt burden: effective annual interest rate by lender type</div>
+      <div id="chart-ear"></div>
+      <div class="chart-note">IFD/cooperative: ~25% EAR. Prestamista: median 201% EAR. EH survey detects only 3% of true debt.</div>
+    </div>
+  </div>
+
+  <!-- ── §7 TAX INCIDENCE ── -->
+  <div class="section-title"><span class="num">§7</span> Tax Policy Simulator — IVA Incidence</div>
+  <div class="tax-panel">
+    <div class="tax-header">IVA (sales tax) incidence on informal firm profitability</div>
+    <div class="tax-controls">
+      <div class="filter-group">
+        <label>IVA rate (%)</label>
+        <input type="range" id="iva-slider" min="0" max="25" value="13" step="1" oninput="updateIVA()">
+        <span id="iva-val" style="font-family:'IBM Plex Mono',monospace;font-weight:500;min-width:30px">13%</span>
+      </div>
+      <div class="tax-result" id="iva-result">Loading…</div>
+    </div>
+  </div>
+  <div class="chart-grid-2">
+    <div class="chart-box">
+      <div class="chart-title">Firms pushed into loss by IVA rate</div>
+      <div id="chart-iva-cascade"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Pre-IVA vs post-IVA adjusted net income (Bs/week)</div>
+      <div id="chart-iva-scatter"></div>
+    </div>
+  </div>
+
+  <!-- ── §8 FIRM EXPLORER ── -->
+  <div class="section-title"><span class="num">§8</span> Firm Explorer</div>
+  <div class="chart-box">
+    <div class="chart-title">All firms — click column headers to sort</div>
+    <div class="table-wrapper">
+      <table id="firm-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('firm_id')">ID</th>
+            <th onclick="sortTable('sector_en')">Sector</th>
+            <th onclick="sortTable('city')">City</th>
+            <th onclick="sortTable('gender')">Sex</th>
+            <th onclick="sortTable('typology')">Type</th>
+            <th onclick="sortTable('owner_hours_weekly')">Hrs/wk</th>
+            <th onclick="sortTable('total_revenue_diary')">Revenue (Bs)</th>
+            <th onclick="sortTable('net_income_conventional')">Profit conv.</th>
+            <th onclick="sortTable('net_income_adjusted')">Profit adj.</th>
+            <th onclick="sortTable('labor_imputed')">Labour imp.</th>
+            <th onclick="sortTable('cash_flow_operating')">Cash flow</th>
+            <th onclick="sortTable('interest_burden_pct')">Int. burden %</th>
+            <th onclick="sortTable('mw_multiple')">MW multiple</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="chart-note" style="margin-top:0.8rem">MW multiple = adjusted hourly return / minimum wage. Values below 1 indicate the worker earns below the statutory minimum wage.</div>
+  </div>
+
+</main>
+
+<footer>
+  Data are simulated to match the statistical properties of a seven-day financial diary study of 300 informal firms in Bolivia (2025). 
+  Methodology: Hernani-Limarino (2026) "Ledgers of the Self-Employed: Accounting for the Invisible Firm."
+  Shadow wage = Bs 13.64/hr (statutory minimum wage). Informal discount rate = 18%. 
+  <a href="https://github.com/wernerhl/ledgers-bolivia" target="_blank">GitHub repository</a> · 
+  Contact: <a href="mailto:wernerhl@gmail.com">wernerhl@gmail.com</a>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA & STATE
+// ═══════════════════════════════════════════════════════════
+
+let rawData = [];
+let filteredData = [];
+let sortCol = 'net_income_adjusted';
+let sortAsc = true;
+let ivaRate = 0.13;
+
+const TYPOLOGY_COLORS = {
+  'I_Viable':           '#27ae60',
+  'II_Precaria':        '#e67e22',
+  'III_Atrapada_deuda': '#8e44ad',
+  'IV_Riesgo_critico':  '#c0392b',
+};
+const TYPOLOGY_LABELS = {
+  'I_Viable':           'I — Viable',
+  'II_Precaria':        'II — Precaria',
+  'III_Atrapada_deuda': 'III — Debt-trapped',
+  'IV_Riesgo_critico':  'IV — Critical risk',
+};
+
+const PLOTLY_LAYOUT_BASE = {
+  margin: { t: 10, r: 10, b: 40, l: 55 },
+  paper_bgcolor: 'white',
+  plot_bgcolor:  'white',
+  font: { family: 'IBM Plex Sans, sans-serif', size: 11, color: '#333' },
+  xaxis: { gridcolor: '#eee', zerolinecolor: '#ccc' },
+  yaxis: { gridcolor: '#eee', zerolinecolor: '#ccc' },
+  showlegend: false,
+};
+const PLOTLY_CONFIG = { responsive: true, displayModeBar: false };
+
+// ═══════════════════════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════════════════════
+
+async function loadData() {
+  return new Promise((res, rej) => {
+    Papa.parse('data/ledgers_dashboard_data.csv', {
+      download: true,
+      header: true,
+      dynamicTyping: true,
+      complete: r => res(r.data.filter(d => d.firm_id)),
+      error: rej,
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════════════
+
+function applyFilters() {
+  const sector = document.getElementById('f-sector').value;
+  const city   = document.getElementById('f-city').value;
+  const gender = document.getElementById('f-gender').value;
+  const type   = document.getElementById('f-type').value;
+  const poor   = document.getElementById('f-poor').value;
+
+  filteredData = rawData.filter(d => {
+    if (sector && d.sector_en !== sector) return false;
+    if (city   && !d.city.includes(city.replace('/El Alto',''))) return false;
+    if (gender && d.gender !== gender) return false;
+    if (type   && d.typology !== type) return false;
+    if (poor === 'true'  && !d.is_poor) return false;
+    if (poor === 'false' && d.is_poor)  return false;
+    return true;
+  });
+  document.getElementById('n-firms-label').textContent = `${filteredData.length} firms`;
+  renderAll();
+}
+
+function resetFilters() {
+  ['f-sector','f-city','f-gender','f-type','f-poor'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  applyFilters();
+}
+
+['f-sector','f-city','f-gender','f-type','f-poor'].forEach(id => {
+  document.getElementById(id).addEventListener('change', applyFilters);
+});
+
+// ═══════════════════════════════════════════════════════════
+// STAT CARDS
+// ═══════════════════════════════════════════════════════════
+
+function median(arr) {
+  const s = [...arr].sort((a,b)=>a-b);
+  const m = Math.floor(s.length/2);
+  return s.length % 2 ? s[m] : (s[m-1]+s[m])/2;
+}
+function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function pct(arr, fn) { return arr.filter(fn).length / arr.length * 100; }
+
+function renderStats() {
+  const d = filteredData;
+  if (!d.length) return;
+  const ni = d.map(r => r.net_income_adjusted);
+  const cf = d.map(r => r.cash_flow_operating);
+  const hr = d.map(r => r.hourly_return_adjusted_bs).filter(v => isFinite(v));
+
+  const cards = [
+    { label: 'Firms', val: d.length, sub: 'in selection', cls: '' },
+    { label: '% Loss-making', val: pct(d, r => r.net_income_adjusted < 0).toFixed(0)+'%', sub: 'adjusted accounting', cls: 'red' },
+    { label: 'Median adj. profit', val: 'Bs '+median(ni).toFixed(0), sub: 'per week', cls: median(ni)<0?'red':'green' },
+    { label: 'Median cash flow', val: 'Bs '+median(cf).toFixed(0), sub: 'operating, per week', cls: 'green' },
+    { label: 'Median hourly return', val: 'Bs '+median(hr).toFixed(1), sub: 'vs min. wage Bs 13.64/hr', cls: median(hr)<0?'red':'green' },
+    { label: '% Below min. wage', val: pct(d, r => r.mw_multiple < 1).toFixed(0)+'%', sub: 'hourly adj. return', cls: 'amber' },
+    { label: 'Accounting gap', val: 'Bs '+median(d.map(r=>r.accounting_gap_bs)).toFixed(0), sub: 'median (survey − diary)', cls: 'blue' },
+    { label: '% Indebted', val: pct(d, r=>r.has_debt_true).toFixed(0)+'%', sub: 'true diary prevalence', cls: 'amber' },
+    { label: 'Median EAR', val: d.filter(r=>r.has_debt_true&&r.effective_annual_rate>0).length ?
+        (median(d.filter(r=>r.has_debt_true&&r.effective_annual_rate>0).map(r=>r.effective_annual_rate))*100).toFixed(0)+'%' : '—',
+      sub: 'among indebted firms', cls: 'red' },
+    { label: 'Median Tobin Q', val: d.filter(r=>r.typology==='I_Viable'&&r.tobin_q_g0>0&&r.tobin_q_g0<500).length ?
+        median(d.filter(r=>r.typology==='I_Viable'&&r.tobin_q_g0>0&&r.tobin_q_g0<500).map(r=>r.tobin_q_g0)).toFixed(0)+'×' : '—',
+      sub: 'going-concern / book (viable)', cls: 'blue' },
+  ];
+
+  document.getElementById('stat-grid').innerHTML = cards.map(c => `
+    <div class="stat-card ${c.cls}">
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value">${c.val}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════════
+
+function renderDistChart() {
+  const d = filteredData;
+  const vals = d.map(r => r.net_income_adjusted);
+  const colors = d.map(r => r.net_income_adjusted < 0 ? '#c0392b' : '#27ae60');
+
+  const traces = [
+    { x: vals.filter(v=>v<0), type:'histogram', name:'Loss-making',
+      marker:{color:'rgba(192,57,43,0.6)', line:{color:'rgba(192,57,43,0.3)',width:0.5}},
+      xbins:{size:100}, nbinsx:30 },
+    { x: vals.filter(v=>v>=0), type:'histogram', name:'Profitable',
+      marker:{color:'rgba(39,174,96,0.6)', line:{color:'rgba(39,174,96,0.3)',width:0.5}},
+      xbins:{size:100}, nbinsx:30 },
+  ];
+  const layout = { ...PLOTLY_LAYOUT_BASE,
+    barmode: 'overlay',
+    xaxis: { ...PLOTLY_LAYOUT_BASE.xaxis, title:'Bs / week', zeroline:true, zerolinewidth:2, zerolinecolor:'#333' },
+    yaxis: { ...PLOTLY_LAYOUT_BASE.yaxis, title:'# firms' },
+    shapes: [{ type:'line', x0:0, x1:0, y0:0, y1:1, yref:'paper',
+      line:{color:'#1a1a1a', width:2, dash:'dot'} }],
+    annotations: [
+      { x: median(vals), y: 1, yref:'paper', text:'Median', showarrow:true,
+        arrowhead:2, ax:40, ay:-30, font:{size:10}, arrowcolor:'#333' }
+    ],
+  };
+  Plotly.newPlot('chart-dist', traces, layout, PLOTLY_CONFIG);
+}
+
+function renderSectorPctChart() {
+  const sectors = [...new Set(filteredData.map(r=>r.sector_en))].sort();
+  const convPct = sectors.map(() => 100);
+  const adjPct  = sectors.map(s => {
+    const sub = filteredData.filter(r=>r.sector_en===s);
+    return sub.filter(r=>r.net_income_adjusted>0).length / sub.length * 100;
+  });
+  const traces = [
+    { name:'Conventional (survey)', x:sectors, y:convPct, type:'bar',
+      marker:{color:'rgba(41,128,185,0.3)', line:{color:'rgba(41,128,185,0.5)',width:1}},
+      text:convPct.map(v=>v.toFixed(0)+'%'), textposition:'outside',
+      textfont:{size:10} },
+    { name:'Adjusted (diary)', x:sectors, y:adjPct, type:'bar',
+      marker:{color:'rgba(41,128,185,0.85)', line:{color:'rgba(41,128,185,1)',width:1}},
+      text:adjPct.map(v=>v.toFixed(0)+'%'), textposition:'outside',
+      textfont:{size:10, color:'#1a1a2e'} },
+  ];
+  const layout = { ...PLOTLY_LAYOUT_BASE, barmode:'group',
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'% profitable', range:[0,120]},
+    showlegend:true, legend:{x:0.6, y:1, font:{size:10}},
+  };
+  Plotly.newPlot('chart-sector-pct', traces, layout, PLOTLY_CONFIG);
+}
+
+function renderWaterfall() {
+  const d = filteredData;
+  const med = col => median(d.map(r=>r[col]));
+  const rev    = med('total_revenue_diary');
+  const cogs   = med('cogs');
+  const opex   = med('total_op_exp_conventional') - med('interest_paid');
+  const intpd  = med('interest_paid');
+  const lab    = med('labor_imputed');
+  const dep    = med('depreciation_imputed');
+  const netC   = med('net_income_conventional');
+  const netA   = med('net_income_adjusted');
+
+  const x = ['Revenue','− COGS','− Opex','− Interest','= Conv. profit','− Labour imp.','− Deprec.','= Adj. profit'];
+  const y = [rev, -cogs, -opex, -intpd, netC, -lab, -dep, netA];
+
+  const traces = [{ type:'waterfall', x, y,
+    connector:{line:{color:'#ccc'}},
+    increasing:{marker:{color:'#27ae60'}},
+    decreasing:{marker:{color:'#c0392b'}},
+    totals:{marker:{color:'#2980b9'}},
+    texttemplate:'Bs %{y:,.0f}', textposition:'outside',
+    textfont:{size:9},
+  }];
+  const layout = { ...PLOTLY_LAYOUT_BASE,
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'Bs / week'},
+    margin:{...PLOTLY_LAYOUT_BASE.margin, b:60, l:65},
+  };
+  Plotly.newPlot('chart-waterfall', traces, layout, PLOTLY_CONFIG);
+}
+
+function renderTypologySector() {
+  const sectors = [...new Set(filteredData.map(r=>r.sector_en))].sort();
+  const types   = ['I_Viable','II_Precaria','III_Atrapada_deuda','IV_Riesgo_critico'];
+  const traces  = types.map(t => ({
+    name: TYPOLOGY_LABELS[t],
+    x: sectors,
+    y: sectors.map(s => {
+      const sub = filteredData.filter(r=>r.sector_en===s);
+      return sub.length ? sub.filter(r=>r.typology===t).length/sub.length*100 : 0;
+    }),
+    type:'bar',
+    marker:{color: TYPOLOGY_COLORS[t]},
+  }));
+  const layout = { ...PLOTLY_LAYOUT_BASE, barmode:'stack',
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'%', range:[0,105]},
+    showlegend:true, legend:{x:0.5, y:1.15, orientation:'h', font:{size:9}},
+    margin:{...PLOTLY_LAYOUT_BASE.margin, b:70},
+  };
+  Plotly.newPlot('chart-typology-sector', traces, layout, PLOTLY_CONFIG);
+}
+
+function renderScatter() {
+  const d = filteredData;
+  const types = ['I_Viable','II_Precaria','III_Atrapada_deuda','IV_Riesgo_critico'];
+  const MIN_WAGE_WEEKLY = 13.64 * 55;
+
+  const traces = types.map(t => {
+    const sub = d.filter(r=>r.typology===t);
+    return {
+      name: TYPOLOGY_LABELS[t],
+      x: sub.map(r=>Math.min(r.interest_burden_pct,45)),
+      y: sub.map(r=>Math.max(Math.min(r.net_income_adjusted,2000),-2500)),
+      mode:'markers',
+      marker:{
+        color: TYPOLOGY_COLORS[t],
+        size: sub.map(r=>Math.max(6, Math.min(18, r.total_hours_weekly/5))),
+        opacity: 0.7,
+        line:{color:'white',width:0.5},
+      },
+      text: sub.map(r=>`<b>${r.firm_id}</b><br>Sector: ${r.sector_en}<br>City: ${r.city}<br>Gender: ${r.gender}<br>Hours/wk: ${r.owner_hours_weekly}<br>Revenue: Bs ${r.total_revenue_diary?.toFixed(0)}<br>Adj. profit: Bs ${r.net_income_adjusted?.toFixed(0)}<br>Labour imp.: Bs ${r.labor_imputed?.toFixed(0)}<br>Interest burden: ${r.interest_burden_pct?.toFixed(1)}%<br>MW multiple: ${r.mw_multiple?.toFixed(2)}x`),
+      hovertemplate: '%{text}<extra></extra>',
+    };
+  });
+
+  const layout = { ...PLOTLY_LAYOUT_BASE,
+    showlegend:true,
+    legend:{x:0.7, y:1, font:{size:10}},
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'Interest burden (% of revenue)', range:[-0.5,47]},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'Adjusted net income (Bs/week)', zeroline:true, zerolinewidth:1.5, zerolinecolor:'#333'},
+    shapes:[
+      {type:'line', x0:0, x1:45, y0:-MIN_WAGE_WEEKLY, y1:-MIN_WAGE_WEEKLY,
+        line:{color:'#555', width:1, dash:'dot'}},
+      {type:'line', x0:10, x1:10, y0:-2600, y1:2200,
+        line:{color:'#aaa', width:1, dash:'dash'}},
+    ],
+    annotations:[
+      {x:40, y:-MIN_WAGE_WEEKLY-80, text:'− min. wage equivalent', showarrow:false, font:{size:9,color:'#777'}},
+    ],
+    margin:{...PLOTLY_LAYOUT_BASE.margin, b:50},
+  };
+  Plotly.newPlot('chart-scatter', traces, layout, PLOTLY_CONFIG);
+}
+
+function renderPersistenceCharts() {
+  const d = filteredData;
+
+  // CF vs NI for loss-making
+  const loss = d.filter(r=>r.net_income_adjusted<0);
+  Plotly.newPlot('chart-cf-vs-ni', [
+    { x: loss.map(r=>r.net_income_adjusted), y: loss.map(r=>r.cash_flow_operating),
+      mode:'markers', type:'scatter',
+      marker:{color:loss.map(r=>TYPOLOGY_COLORS[r.typology]||'#888'), size:6, opacity:0.7},
+      text: loss.map(r=>`${r.firm_id}<br>Adj. profit: Bs ${r.net_income_adjusted.toFixed(0)}<br>Cash flow: Bs ${r.cash_flow_operating.toFixed(0)}`),
+      hovertemplate:'%{text}<extra></extra>',
+    }
+  ], { ...PLOTLY_LAYOUT_BASE,
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'Adj. net income (Bs/wk)'},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'Operating CF (Bs/wk)'},
+    shapes:[{type:'line', x0:-2500, x1:0, y0:0, y1:0,
+      line:{color:'#c0392b',width:1,dash:'dot'}}],
+    annotations:[{x:-1200, y:200, text:'All points above this line →<br>positive cash flow', showarrow:false,
+      font:{size:9,color:'#888'}, align:'center'}],
+  }, PLOTLY_CONFIG);
+
+  // Hourly return distribution
+  const hrs = d.map(r=>r.hourly_return_adjusted_bs).filter(v=>isFinite(v)&&v>-100&&v<100);
+  const MIN_WAGE = 13.64;
+  Plotly.newPlot('chart-hourly', [
+    { x: hrs.filter(v=>v<0), type:'histogram', name:'Negative return',
+      marker:{color:'rgba(192,57,43,0.7)'}, xbins:{size:2} },
+    { x: hrs.filter(v=>v>=0&&v<MIN_WAGE), type:'histogram', name:'Below min. wage',
+      marker:{color:'rgba(230,126,34,0.7)'}, xbins:{size:2} },
+    { x: hrs.filter(v=>v>=MIN_WAGE), type:'histogram', name:'Above min. wage',
+      marker:{color:'rgba(39,174,96,0.7)'}, xbins:{size:2} },
+  ], { ...PLOTLY_LAYOUT_BASE, barmode:'stack',
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'Bs / hour'},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'# firms'},
+    shapes:[{type:'line', x0:MIN_WAGE, x1:MIN_WAGE, y0:0, y1:1, yref:'paper',
+      line:{color:'#2c3e50',width:1.5,dash:'dash'}}],
+    annotations:[{x:MIN_WAGE+2, y:0.9, yref:'paper', text:'Min. wage<br>Bs 13.64/hr', showarrow:false, font:{size:9,color:'#444'}}],
+    showlegend:true, legend:{x:0.55, y:1, font:{size:9}},
+  }, PLOTLY_CONFIG);
+
+  // Extraction rate
+  const extr = d.map(r=>r.extraction_rate*100).filter(v=>isFinite(v)&&v>=0&&v<=50);
+  Plotly.newPlot('chart-extraction', [
+    { x: extr, type:'histogram', marker:{color:'rgba(41,128,185,0.7)',
+      line:{color:'rgba(41,128,185,0.3)',width:0.5}}, xbins:{size:1} }
+  ], { ...PLOTLY_LAYOUT_BASE,
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'Household draws / revenue (%)'},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'# firms'},
+    shapes:[
+      {type:'line', x0:10, x1:10, y0:0, y1:1, yref:'paper', line:{color:'#c0392b',width:1.5,dash:'dash'}},
+      {type:'line', x0:23, x1:23, y0:0, y1:1, yref:'paper', line:{color:'#e67e22',width:1.5,dash:'dot'}},
+    ],
+  }, PLOTLY_CONFIG);
+}
+
+function renderSurveyVsDiary() {
+  const d = filteredData.filter(r=>r.eh_yi_net_annual&&r.diary_yi_net_adj_annualized);
+  const types = ['I_Viable','II_Precaria','III_Atrapada_deuda','IV_Riesgo_critico'];
+  const traces = types.map(t=>{
+    const sub = d.filter(r=>r.typology===t);
+    return { name:TYPOLOGY_LABELS[t], x:sub.map(r=>r.eh_yi_net_annual),
+      y:sub.map(r=>r.diary_yi_net_adj_annualized), mode:'markers',
+      marker:{color:TYPOLOGY_COLORS[t], size:6, opacity:0.65},
+      text:sub.map(r=>`${r.firm_id}<br>EH: Bs ${r.eh_yi_net_annual?.toFixed(0)}/yr<br>Diary adj.: Bs ${r.diary_yi_net_adj_annualized?.toFixed(0)}/yr`),
+      hovertemplate:'%{text}<extra></extra>',
+    };
+  });
+  const allX = d.map(r=>r.eh_yi_net_annual);
+  const lim = Math.max(...allX.map(Math.abs), 50000);
+  traces.push({ x:[-lim,lim], y:[-lim,lim], mode:'lines', name:'45° line (equal)',
+    line:{color:'#aaa', dash:'dot', width:1}, hoverinfo:'skip' });
+
+  Plotly.newPlot('chart-eh-vs-diary', traces, { ...PLOTLY_LAYOUT_BASE,
+    showlegend:true, legend:{x:0.02, y:0.98, font:{size:9}},
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'EH survey annual net income (Bs)'},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'Diary adjusted annual net income (Bs)'},
+  }, PLOTLY_CONFIG);
+
+  // Ratio by sector
+  const sectors = [...new Set(filteredData.map(r=>r.sector_en))].sort();
+  const ratios = sectors.map(s=>{
+    const sub = filteredData.filter(r=>r.sector_en===s&&r.ratio_diary_eh_income);
+    return sub.length ? median(sub.map(r=>r.ratio_diary_eh_income)) : null;
+  });
+  Plotly.newPlot('chart-ratio-sector', [
+    { x: ratios, y: sectors, type:'bar', orientation:'h',
+      marker:{color: ratios.map(v=>v>1?'rgba(39,174,96,0.7)':'rgba(192,57,43,0.7)')},
+      text: ratios.map(v=>v?.toFixed(2)), textposition:'outside', textfont:{size:10},
+    }
+  ], { ...PLOTLY_LAYOUT_BASE,
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'Diary / EH income ratio', zeroline:false},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, automargin:true},
+    margin:{...PLOTLY_LAYOUT_BASE.margin, l:110},
+    shapes:[{type:'line', x0:1, x1:1, y0:-0.5, y1:sectors.length-0.5,
+      line:{color:'#333', width:1.5, dash:'dash'}}],
+  }, PLOTLY_CONFIG);
+}
+
+function renderFinancialRatios() {
+  const d = filteredData;
+  // ROA
+  const roa_conv = d.map(r=>Math.max(Math.min(r.roa_conventional*100,2000),-100)).filter(isFinite);
+  const roa_adj  = d.map(r=>Math.max(Math.min(r.roa_adjusted*100,500),-200)).filter(isFinite);
+  Plotly.newPlot('chart-roa', [
+    { x:roa_conv, type:'histogram', name:'Conventional', marker:{color:'rgba(41,128,185,0.5)'}, xbins:{size:50} },
+    { x:roa_adj,  type:'histogram', name:'Adjusted',     marker:{color:'rgba(192,57,43,0.65)'}, xbins:{size:50} },
+  ], { ...PLOTLY_LAYOUT_BASE, barmode:'overlay',
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'ROA (% / year)'},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'# firms'},
+    shapes:[{type:'line',x0:0,x1:0,y0:0,y1:1,yref:'paper',line:{color:'#333',width:1.5}}],
+    showlegend:true, legend:{x:0.55, y:1, font:{size:9}},
+  }, PLOTLY_CONFIG);
+
+  // Tobin Q
+  const viable = d.filter(r=>r.typology==='I_Viable'&&r.tobin_q_g0>0&&r.tobin_q_g0<500);
+  Plotly.newPlot('chart-tobin', [
+    { x:viable.map(r=>r.tobin_q_g0), type:'histogram',
+      marker:{color:'rgba(39,174,96,0.7)', line:{color:'rgba(39,174,96,0.3)',width:0.5}},
+      xbins:{size:10},
+    }
+  ], { ...PLOTLY_LAYOUT_BASE,
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'Tobin\'s Q (going-concern PV / book assets)'},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'# viable firms'},
+    shapes:[{type:'line',x0:median(viable.map(r=>r.tobin_q_g0)),x1:median(viable.map(r=>r.tobin_q_g0)),
+      y0:0,y1:1,yref:'paper',line:{color:'#27ae60',width:2,dash:'dash'}}],
+    annotations:[{x:median(viable.map(r=>r.tobin_q_g0))+5, y:0.85, yref:'paper',
+      text:`Median: ${median(viable.map(r=>r.tobin_q_g0)).toFixed(0)}×`, showarrow:false, font:{size:10,color:'#27ae60'}}],
+  }, PLOTLY_CONFIG);
+
+  // EAR by debt type
+  const indebted = d.filter(r=>r.has_debt_true&&r.effective_annual_rate>0&&r.effective_annual_rate<20);
+  const byType = {};
+  indebted.forEach(r=>{
+    const t = r.debt_type_x||'Unknown';
+    if(!byType[t]) byType[t]=[];
+    byType[t].push(r.effective_annual_rate*100);
+  });
+  const typeNames = Object.keys(byType);
+  Plotly.newPlot('chart-ear', typeNames.map((t,i)=>({
+    y: byType[t], type:'box', name:t,
+    marker:{color:['rgba(192,57,43,0.7)','rgba(41,128,185,0.7)','rgba(230,126,34,0.7)','rgba(39,174,96,0.7)'][i]||'#888'},
+    boxmean:true,
+  })), { ...PLOTLY_LAYOUT_BASE,
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'Effective annual rate (%)'},
+    showlegend:false,
+  }, PLOTLY_CONFIG);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAX SIMULATOR
+// ═══════════════════════════════════════════════════════════
+
+function updateIVA() {
+  ivaRate = document.getElementById('iva-slider').value / 100;
+  document.getElementById('iva-val').textContent = Math.round(ivaRate*100) + '%';
+  renderIVA();
+}
+
+function renderIVA() {
+  const d = filteredData;
+  const rates = [0,2,4,6,8,10,12,13,15,18,20,25];
+  const pctLoss = rates.map(r => {
+    const rate = r/100;
+    return d.filter(row => (row.net_income_adjusted - row.total_revenue_diary*rate) < 0).length / d.length * 100;
+  });
+
+  const preAlreadyLoss = d.filter(r=>r.net_income_adjusted<0).length;
+  const postLoss = d.filter(r=>(r.net_income_adjusted - r.total_revenue_diary*ivaRate) < 0).length;
+  const newlyPushed = Math.max(0, postLoss - preAlreadyLoss);
+
+  document.getElementById('iva-result').innerHTML =
+    `At <b>${Math.round(ivaRate*100)}% IVA</b>: <b>${postLoss}</b> firms (${(postLoss/d.length*100).toFixed(0)}%) loss-making · <b>${newlyPushed}</b> newly pushed under`;
+
+  Plotly.newPlot('chart-iva-cascade', [
+    { x: rates, y: pctLoss, type:'scatter', mode:'lines+markers',
+      line:{color:'#c0392b', width:2},
+      marker:{size:6, color:rates.map(r=>r==Math.round(ivaRate*100)?'#c0392b':'#e8a09a')},
+      fill:'tonexty', fillcolor:'rgba(192,57,43,0.08)',
+      text: pctLoss.map(v=>v.toFixed(0)+'%'), hovertemplate:'IVA %{x}%: %{y:.1f}% loss<extra></extra>',
+    },
+    { x: [0], y:[preAlreadyLoss/d.length*100], mode:'markers',
+      marker:{color:'#888', size:8, symbol:'circle-open'}, name:'No tax baseline',
+    },
+  ], { ...PLOTLY_LAYOUT_BASE,
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'IVA rate (%)', dtick:5},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'% firms loss-making', range:[0,105]},
+    shapes:[{type:'line', x0:ivaRate*100, x1:ivaRate*100, y0:0, y1:1, yref:'paper',
+      line:{color:'#c0392b', width:1.5, dash:'dash'}}],
+  }, PLOTLY_CONFIG);
+
+  // Scatter
+  const traces = ['I_Viable','II_Precaria','III_Atrapada_deuda','IV_Riesgo_critico'].map(t=>{
+    const sub = d.filter(r=>r.typology===t);
+    return { name:TYPOLOGY_LABELS[t], x:sub.map(r=>r.net_income_adjusted),
+      y:sub.map(r=>r.net_income_adjusted - r.total_revenue_diary*ivaRate),
+      mode:'markers', marker:{color:TYPOLOGY_COLORS[t], size:5, opacity:0.65},
+      hovertemplate:`${TYPOLOGY_LABELS[t]}<br>Pre-IVA: Bs %{x:.0f}<br>Post-IVA: Bs %{y:.0f}<extra></extra>`,
+    };
+  });
+  const limVals = d.map(r=>r.net_income_adjusted).filter(isFinite);
+  const lim = Math.max(Math.abs(Math.min(...limVals)), Math.abs(Math.max(...limVals)));
+  traces.push({ x:[-lim,lim], y:[-lim,lim], mode:'lines', name:'45° (no tax)',
+    line:{color:'#aaa',dash:'dot',width:1}, hoverinfo:'skip' });
+  Plotly.newPlot('chart-iva-scatter', traces, { ...PLOTLY_LAYOUT_BASE,
+    showlegend:true, legend:{x:0.02, y:0.98, font:{size:9}},
+    xaxis:{...PLOTLY_LAYOUT_BASE.xaxis, title:'Adj. net income pre-IVA (Bs/wk)', zeroline:true, zerolinewidth:1.5},
+    yaxis:{...PLOTLY_LAYOUT_BASE.yaxis, title:'Adj. net income post-IVA (Bs/wk)', zeroline:true, zerolinewidth:1.5},
+  }, PLOTLY_CONFIG);
+}
+
+// ═══════════════════════════════════════════════════════════
+// FIRM TABLE
+// ═══════════════════════════════════════════════════════════
+
+function typeBadge(t) {
+  const cls = t==='I_Viable'?'viable':t==='II_Precaria'?'precaria':t==='IV_Riesgo_critico'?'critica':'atrapada';
+  return `<span class="badge badge-${cls}">${TYPOLOGY_LABELS[t]?.replace('— ','')}</span>`;
+}
+function fmtBs(v) {
+  if (!isFinite(v)) return '—';
+  const cls = v<0?'neg':'pos';
+  return `<span class="${cls}">Bs ${Math.round(v).toLocaleString()}</span>`;
+}
+function fmtNum(v, dec=1) { return isFinite(v) ? v.toFixed(dec) : '—'; }
+
+function renderTable() {
+  const sorted = [...filteredData].sort((a,b)=>{
+    const va = a[sortCol], vb = b[sortCol];
+    if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return sortAsc ? va-vb : vb-va;
+  });
+
+  const rows = sorted.slice(0,100).map(r=>`
+    <tr>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem">${r.firm_id}</td>
+      <td>${r.sector_en}</td>
+      <td>${r.city}</td>
+      <td>${r.gender}</td>
+      <td>${typeBadge(r.typology)}</td>
+      <td>${r.owner_hours_weekly}</td>
+      <td>Bs ${Math.round(r.total_revenue_diary).toLocaleString()}</td>
+      <td>${fmtBs(r.net_income_conventional)}</td>
+      <td>${fmtBs(r.net_income_adjusted)}</td>
+      <td>${fmtBs(r.labor_imputed)}</td>
+      <td>${fmtBs(r.cash_flow_operating)}</td>
+      <td>${fmtNum(r.interest_burden_pct)}%</td>
+      <td>${fmtNum(r.mw_multiple,2)}×</td>
+    </tr>`).join('');
+
+  document.getElementById('table-body').innerHTML = rows +
+    (sorted.length>100 ? `<tr><td colspan="13" style="text-align:center;color:#888;font-style:italic;padding:0.8rem">Showing 100 of ${sorted.length} firms — use filters to narrow selection</td></tr>` : '');
+}
+
+function sortTable(col) {
+  if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
+  renderTable();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════════
+
+function renderAll() {
+  renderStats();
+  renderDistChart();
+  renderSectorPctChart();
+  renderWaterfall();
+  renderTypologySector();
+  renderScatter();
+  renderPersistenceCharts();
+  renderSurveyVsDiary();
+  renderFinancialRatios();
+  renderIVA();
+  renderTable();
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+
+async function init() {
+  try {
+    rawData = await loadData();
+    filteredData = rawData;
+    document.getElementById('loading').style.display = 'none';
+    renderAll();
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:#c0392b;font-family:'IBM Plex Mono',monospace;font-size:0.85rem;text-align:center">
+        <div style="font-size:1.5rem;margin-bottom:1rem">⚠</div>
+        Could not load data. Please run from a local server<br>or deploy to GitHub Pages.<br><br>
+        <code>python -m http.server 8000</code>
+      </div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
