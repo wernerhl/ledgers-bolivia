@@ -1,965 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ledgers of the Self-Employed — Bolivia 2025</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --ink:    #1a1a1a;
-    --paper:  #f5f0e8;
-    --cream:  #ede8de;
-    --rule:   #c8c0b0;
-    --red:    #c0392b;
-    --green:  #27ae60;
-    --amber:  #e67e22;
-    --blue:   #2980b9;
-    --purple: #8e44ad;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--paper); color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; line-height: 1.6; }
-
-  /* HEADER */
-  header { background: var(--ink); color: var(--paper); padding: 2.2rem 3rem 1.6rem; border-bottom: 3px solid var(--red); position: relative; }
-  .kicker { font-family: 'IBM Plex Mono', monospace; font-size: 0.67rem; letter-spacing: 0.2em; text-transform: uppercase; color: #999; margin-bottom: 0.5rem; }
-  header h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 3vw, 2.3rem); font-weight: 700; line-height: 1.15; margin-bottom: 0.4rem; }
-  header h1 em { font-weight: 400; font-size: 0.73em; color: #bbb; }
-  .subtitle { font-size: 0.87rem; color: #bbb; max-width: 760px; margin-bottom: 1.1rem; }
-  .meta { display: flex; gap: 0.8rem; flex-wrap: wrap; }
-  .meta-pill { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14); padding: 0.2rem 0.6rem; border-radius: 2px; }
-
-  /* LANG TOGGLE */
-  .lang-toggle { position: absolute; top: 1.4rem; right: 2.5rem; display: flex; border: 1px solid rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
-  .lang-btn { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; letter-spacing: 0.1em; padding: 0.32rem 0.7rem; background: transparent; color: #888; border: none; cursor: pointer; transition: all 0.15s; }
-  .lang-btn.active { background: rgba(255,255,255,0.12); color: #fff; font-weight: 500; }
-
-  /* NAV */
-  nav { background: #111; border-bottom: 1px solid #2a2a2a; padding: 0 2.5rem; display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; position: sticky; top: 0; z-index: 100; }
-  nav::-webkit-scrollbar { display: none; }
-  .nav-item { font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; letter-spacing: 0.07em; text-transform: uppercase; color: #666; padding: 0.65rem 0.9rem; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: all 0.15s; text-decoration: none; }
-  .nav-item:hover { color: #ccc; }
-  .nav-item.active { color: #fff; border-bottom-color: var(--red); }
-
-  /* FILTERS */
-  .filter-bar { background: var(--cream); border-bottom: 1px solid var(--rule); padding: 0.8rem 2.5rem; display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap; }
-  .filter-bar label { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: #888; }
-  .filter-bar select { font-family: 'IBM Plex Sans', sans-serif; font-size: 0.82rem; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); padding: 0.28rem 0.5rem; border-radius: 2px; outline: none; cursor: pointer; }
-  .filter-group { display: flex; align-items: center; gap: 0.35rem; }
-  #n-firms-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--red); font-weight: 500; min-width: 75px; }
-  .reset-btn { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--rule); background: transparent; color: #888; padding: 0.28rem 0.75rem; border-radius: 2px; cursor: pointer; transition: all 0.15s; }
-  .reset-btn:hover { border-color: var(--red); color: var(--red); }
-
-  /* MAIN */
-  main { padding: 1.8rem 2.5rem; max-width: 1600px; margin: 0 auto; }
-
-  /* SECTION */
-  .section-block { scroll-margin-top: 42px; padding-top: 0.5rem; margin-bottom: 0.5rem; }
-  .section-header { border-top: 2px solid var(--ink); padding-top: 0.55rem; margin-bottom: 0.55rem; display: flex; align-items: baseline; gap: 0.75rem; }
-  .sec-num { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--red); letter-spacing: 0.1em; flex-shrink: 0; }
-  .section-header h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; }
-
-  /* EXPLAINER */
-  .explainer { background: white; border-left: 3px solid var(--blue); padding: 0.85rem 1.15rem; margin-bottom: 1.1rem; font-size: 0.84rem; line-height: 1.7; color: #2a2a2a; }
-  .explainer strong { color: var(--ink); }
-  .kf { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.77rem; background: var(--cream); border: 1px solid var(--rule); padding: 0.12rem 0.45rem; border-radius: 2px; }
-  .kf.red   { background: #fde8e6; border-color: var(--red);   color: var(--red); }
-  .kf.green { background: #e6f7ee; border-color: var(--green); color: #1a6e3a; }
-  .kf.amber { background: #fef0e0; border-color: var(--amber); color: #7a4400; }
-
-  /* STAT GRID */
-  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(152px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-bottom: 1.4rem; }
-  .stat-card { background: var(--paper); padding: 0.95rem 1.05rem; }
-  .stat-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.63rem; letter-spacing: 0.1em; text-transform: uppercase; color: #999; margin-bottom: 0.3rem; }
-  .stat-value { font-family: 'Playfair Display', serif; font-size: 1.65rem; font-weight: 700; line-height: 1; }
-  .stat-sub { font-size: 0.7rem; color: #aaa; margin-top: 0.2rem; }
-  .stat-card.red   .stat-value { color: var(--red); }
-  .stat-card.green .stat-value { color: var(--green); }
-  .stat-card.amber .stat-value { color: var(--amber); }
-  .stat-card.blue  .stat-value { color: var(--blue); }
-
-  /* CHART GRIDS */
-  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin-bottom: 1.1rem; }
-  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.1rem; margin-bottom: 1.1rem; }
-  .g1 { margin-bottom: 1.1rem; }
-  @media (max-width: 1100px) { .g2, .g3 { grid-template-columns: 1fr; } main, .filter-bar, nav { padding-left: 1.2rem; padding-right: 1.2rem; } header { padding: 1.5rem 1.2rem; } .lang-toggle { top: 1rem; right: 1.2rem; } }
-
-  /* CHART BOX */
-  .chart-box { background: white; border: 1px solid var(--rule); padding: 0.95rem 0.95rem 0.75rem; }
-  .chart-title { font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; letter-spacing: 0.09em; text-transform: uppercase; color: #777; margin-bottom: 0.45rem; padding-bottom: 0.45rem; border-bottom: 1px solid var(--cream); }
-  .chart-note { font-size: 0.7rem; color: #bbb; font-style: italic; margin-top: 0.45rem; line-height: 1.45; }
-
-  /* LEGEND */
-  .typology-legend { display: flex; gap: 1.1rem; flex-wrap: wrap; padding: 0.65rem 1rem; background: var(--cream); border: 1px solid var(--rule); margin-bottom: 0.9rem; font-size: 0.77rem; }
-  .legend-item { display: flex; align-items: center; gap: 0.4rem; }
-  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-
-  /* TAX PANEL */
-  .tax-panel { background: white; border: 1px solid var(--rule); padding: 1rem 1.3rem; margin-bottom: 1.1rem; }
-  .tax-header { font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; letter-spacing: 0.09em; text-transform: uppercase; color: #777; margin-bottom: 0.75rem; padding-bottom: 0.45rem; border-bottom: 1px solid var(--cream); }
-  .tax-controls { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
-  .tax-result { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; padding: 0.4rem 0.9rem; background: var(--cream); border-left: 3px solid var(--red); }
-  input[type=range] { accent-color: var(--red); cursor: pointer; }
-
-  /* TABLE */
-  .table-wrapper { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-  thead th { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; letter-spacing: 0.07em; text-transform: uppercase; text-align: right; padding: 0.45rem 0.55rem; background: var(--cream); border-bottom: 2px solid var(--ink); white-space: nowrap; cursor: pointer; user-select: none; }
-  thead th:first-child, thead th:nth-child(2), thead th:nth-child(3), thead th:nth-child(4) { text-align: left; }
-  thead th:hover { color: var(--blue); }
-  tbody tr { border-bottom: 1px solid var(--cream); transition: background 0.1s; }
-  tbody tr:hover { background: #fffff0; }
-  tbody td { padding: 0.38rem 0.55rem; text-align: right; font-feature-settings: "tnum"; }
-  tbody td:first-child, tbody td:nth-child(2), tbody td:nth-child(3), tbody td:nth-child(4) { text-align: left; }
-  .badge { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.61rem; padding: 0.1rem 0.38rem; border-radius: 2px; font-weight: 500; }
-  .badge-viable   { background: #d5f0df; color: #1a6e3a; }
-  .badge-precaria { background: #fde8cc; color: #7a3e00; }
-  .badge-critica  { background: #fcd5d0; color: #7a1010; }
-  .badge-atrapada { background: #e8d5f0; color: #4a1a6e; }
-  .pos { color: var(--green); font-weight: 500; }
-  .neg { color: var(--red);   font-weight: 500; }
-
-  /* LOADING */
-  #loading { position: fixed; inset: 0; background: var(--paper); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 1rem; }
-  .load-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; }
-  .load-bar { width: 180px; height: 3px; background: var(--cream); position: relative; overflow: hidden; }
-  .load-bar::after { content: ''; position: absolute; top: 0; left: -50%; width: 50%; height: 100%; background: var(--red); animation: slide 1s ease-in-out infinite; }
-  @keyframes slide { 0% { left: -50%; } 100% { left: 100%; } }
-
-  footer { margin-top: 2.5rem; padding: 1.3rem 2.5rem; border-top: 1px solid var(--rule); font-size: 0.72rem; color: #aaa; font-style: italic; }
-  footer a { color: var(--blue); }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ledgers of the Self-Employed | Bolivia Financial Diary</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --text: #e5e5e5;
+            --accent: #3b82f6;
+            --muted: #737373;
+            --border: #262626;
+            --card-bg: #141414;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Palatino Linotype', Palatino, Georgia, serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        header {
+            margin-bottom: 4rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--muted);
+            font-style: italic;
+        }
+        .author {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+        }
+        .author a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: var(--accent);
+        }
+        .stat-value.red { color: #ef4444; }
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--muted);
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        section {
+            margin: 3rem 0;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+        p {
+            margin-bottom: 1rem;
+            color: #a3a3a3;
+        }
+        .downloads {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .download-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            text-decoration: none;
+            color: var(--text);
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .download-card:hover {
+            border-color: var(--accent);
+            background: #1a1a2e;
+        }
+        .download-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        .download-meta {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+        .lang-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            background: var(--border);
+            border-radius: 3px;
+            margin-left: 0.5rem;
+            text-transform: uppercase;
+        }
+        .typology {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .type-card {
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+        .type-card.viable { border-left: 4px solid #22c55e; }
+        .type-card.precaria { border-left: 4px solid #ef4444; }
+        .type-card.atrapada { border-left: 4px solid #f59e0b; }
+        .type-card.critico { border-left: 4px solid #dc2626; }
+        .type-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .type-pct {
+            font-size: 1.5rem;
+            color: var(--muted);
+        }
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>Ledgers of the Self-Employed</h1>
+            <p class="subtitle">Accounting for the Invisible Firm</p>
+            <p class="author">Werner Hernani-Limarino · <a href="mailto:wernerhl@gmail.com">wernerhl@gmail.com</a></p>
+        </header>
 
-<div id="loading">
-  <div class="load-title">Ledgers of the Self-Employed</div>
-  <div class="load-bar"></div>
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.71rem;color:#aaa" id="load-msg">Loading 300 firms · 14,902 transactions…</div>
-</div>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-value">500</div>
+                <div class="stat-label">Firms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">25,338</div>
+                <div class="stat-label">Transactions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value red">43%</div>
+                <div class="stat-label">Loss-making</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5.7</div>
+                <div class="stat-label">Tobin's Q</div>
+            </div>
+        </div>
 
-<header>
-  <div class="lang-toggle">
-    <button class="lang-btn active" onclick="setLang('en')">EN</button>
-    <button class="lang-btn" onclick="setLang('es')">ES</button>
-  </div>
-  <div class="kicker" id="h-kicker">Research Dashboard · Informal Firm Accounting · Bolivia 2025</div>
-  <h1>Ledgers of the Self-Employed<br><em id="h-subtitle-em">Accounting for the Invisible Firm</em></h1>
-  <div class="subtitle" id="h-subtitle">A seven-day financial diary with full double-entry accounting across 300 informal firms in four Bolivian cities. The central finding: household surveys report 100% of the self-employed as profitable. Under proper cost accounting, 57% are loss-making. Explore the data.</div>
-  <div class="meta">
-    <span class="meta-pill">N = 300 firms</span>
-    <span class="meta-pill" id="h-txn">14,902 transactions</span>
-    <span class="meta-pill" id="h-scope">6 sectors · 4 cities</span>
-    <span class="meta-pill" id="h-wage">Shadow wage: Bs 13.64/hr</span>
-    <span class="meta-pill">Hernani-Limarino (2026)</span>
-  </div>
-</header>
+        <section>
+            <h2>Abstract</h2>
+            <p>
+                Informal firms possess invisible capital—location rents, client networks, accumulated 
+                know-how—that never appears on a balance sheet and cannot be recovered from a household 
+                survey. Using a seven-day double-entry financial diary administered to 500 informal firms 
+                across Bolivia (25,338 transaction records), we construct complete income statements, 
+                balance sheets, and going-concern valuations.
+            </p>
+            <p>
+                The central finding: <strong>43 percent of informal firms are loss-making</strong> after 
+                imputing owner and family labor at minimum wage and depreciation at sector-specific rates. 
+                The median accounting gap—Bs 1,002/week—is driven 88% by imputed labor. These loss-making 
+                firms persist because operating cash flow remains positive: 98% generate cash weekly, 
+                masking the accounting loss.
+            </p>
+        </section>
 
-<nav>
-  <a class="nav-item active" href="#sec-overview"  id="nav-1">§1 Overview</a>
-  <a class="nav-item"        href="#sec-reversal"  id="nav-2">§2 Profit Reversal</a>
-  <a class="nav-item"        href="#sec-scatter"   id="nav-3">§3 Firm Map</a>
-  <a class="nav-item"        href="#sec-persist"   id="nav-4">§4 Why Firms Persist</a>
-  <a class="nav-item"        href="#sec-survey"    id="nav-5">§5 Survey vs Diary</a>
-  <a class="nav-item"        href="#sec-ratios"    id="nav-6">§6 Financial Ratios</a>
-  <a class="nav-item"        href="#sec-tax"       id="nav-7">§7 Tax Simulator</a>
-  <a class="nav-item"        href="#sec-explorer"  id="nav-8">§8 Firm Explorer</a>
-</nav>
+        <section>
+            <h2>Firm Typology</h2>
+            <div class="typology">
+                <div class="type-card viable">
+                    <div class="type-name">I — Viable</div>
+                    <div class="type-pct">55.6%</div>
+                    <p>Profit > 0, low debt burden</p>
+                </div>
+                <div class="type-card precaria">
+                    <div class="type-name">II — Precaria</div>
+                    <div class="type-pct">34.4%</div>
+                    <p>Profit ≤ 0, low debt burden</p>
+                </div>
+                <div class="type-card atrapada">
+                    <div class="type-name">III — Debt-trapped</div>
+                    <div class="type-pct">1.6%</div>
+                    <p>Profit > 0, high debt burden</p>
+                </div>
+                <div class="type-card critico">
+                    <div class="type-name">IV — Critical Risk</div>
+                    <div class="type-pct">8.4%</div>
+                    <p>Profit ≤ 0, high debt burden</p>
+                </div>
+            </div>
+        </section>
 
-<div class="filter-bar">
-  <div class="filter-group">
-    <label id="fl-sector">Sector</label>
-    <select id="f-sector">
-      <option value="" id="fo-all-s">All sectors</option>
-      <option value="Commerce">Commerce / Comercio</option>
-      <option value="Manufacturing">Manufacturing / Manufactura</option>
-      <option value="Transport">Transport / Transporte</option>
-      <option value="Food service">Food service / Gastronomía</option>
-      <option value="Other services">Other services / Otros servicios</option>
-      <option value="Admin &amp; support">Admin &amp; support</option>
-    </select>
-  </div>
-  <div class="filter-group">
-    <label id="fl-city">City</label>
-    <select id="f-city">
-      <option value="" id="fo-all-c">All cities</option>
-      <option value="La Paz">La Paz / El Alto</option>
-      <option value="Cochabamba">Cochabamba</option>
-      <option value="Santa Cruz">Santa Cruz</option>
-      <option value="Tarija">Tarija</option>
-    </select>
-  </div>
-  <div class="filter-group">
-    <label id="fl-gender">Gender / Género</label>
-    <select id="f-gender">
-      <option value="" id="fo-all-g">All / Todos</option>
-      <option value="F" id="fo-f">Female / Mujer</option>
-      <option value="M" id="fo-m">Male / Hombre</option>
-    </select>
-  </div>
-  <div class="filter-group">
-    <label id="fl-type">Typology / Tipología</label>
-    <select id="f-type">
-      <option value="" id="fo-all-t">All types</option>
-      <option value="I_Viable">I — Viable</option>
-      <option value="II_Precaria">II — Precaria</option>
-      <option value="IV_Riesgo_critico" id="fo-cr">IV — Critical risk</option>
-    </select>
-  </div>
-  <div class="filter-group">
-    <label id="fl-poor">Poverty / Pobreza</label>
-    <select id="f-poor">
-      <option value="">All / Todos</option>
-      <option value="true" id="fo-poor">Poor / Pobre</option>
-      <option value="false" id="fo-nonpoor">Non-poor / No pobre</option>
-    </select>
-  </div>
-  <span id="n-firms-label">300 firms</span>
-  <button class="reset-btn" onclick="resetFilters()" id="btn-reset">↺ Reset</button>
-</div>
+        <section>
+            <h2>Downloads</h2>
+            <div class="downloads">
+                <a href="docs/ledgers_v2.pdf" class="download-card">
+                    <div class="download-title">Full Paper <span class="lang-tag">EN</span></div>
+                    <div class="download-meta">Ledgers of the Self-Employed: Accounting for the Invisible Firm</div>
+                </a>
+                <a href="docs/ledgers_v2_es.pdf" class="download-card">
+                    <div class="download-title">Artículo Completo <span class="lang-tag">ES</span></div>
+                    <div class="download-meta">Contabilidad de los Cuenta Propia: Libros de la Empresa Invisible</div>
+                </a>
+                <a href="docs/presentation_en.pdf" class="download-card">
+                    <div class="download-title">Presentation <span class="lang-tag">EN</span></div>
+                    <div class="download-meta">60-minute slides (33 slides)</div>
+                </a>
+                <a href="docs/presentation_es.pdf" class="download-card">
+                    <div class="download-title">Presentación <span class="lang-tag">ES</span></div>
+                    <div class="download-meta">60 minutos (35 slides)</div>
+                </a>
+            </div>
+        </section>
 
-<main>
+        <section>
+            <h2>Data & Replication</h2>
+            <div class="downloads">
+                <a href="https://doi.org/10.7910/DVN/KZMHGU" class="download-card" target="_blank">
+                    <div class="download-title">Harvard Dataverse</div>
+                    <div class="download-meta">Full replication package: data, codebooks, scripts</div>
+                </a>
+                <a href="https://github.com/wernerhl/ledgers-bolivia" class="download-card" target="_blank">
+                    <div class="download-title">GitHub Repository</div>
+                    <div class="download-meta">Source code and documentation</div>
+                </a>
+            </div>
+        </section>
 
-<!-- §1 OVERVIEW -->
-<div class="section-block" id="sec-overview">
-  <div class="section-header"><span class="sec-num">§1</span><h2 id="s1-title">Overview</h2></div>
-  <div class="explainer" id="s1-exp">
-    <strong>What you are looking at.</strong> These headline numbers summarise the firms currently selected by the filters above. The most important contrast is between two accounting frameworks: <span class="kf">Conventional</span> — what Bolivia's household survey (<em>Encuesta de Hogares</em>) records, which is always positive — and <span class="kf red">Adjusted</span> — what you get when you add owner labour, family labour, depreciation, and informal debt service at the legal minimum wage. Use the filters above to compare sectors, cities, or gender groups in real time. All amounts are in Bolivianos (Bs) per week.
-  </div>
-  <div class="stat-grid" id="stat-grid"></div>
-</div>
-
-<!-- §2 PROFIT REVERSAL -->
-<div class="section-block" id="sec-reversal">
-  <div class="section-header"><span class="sec-num">§2</span><h2 id="s2-title">The Profit Reversal</h2></div>
-  <div class="explainer" id="s2-exp">
-    <strong>The central finding.</strong> Every firm in the sample appears profitable under the conventional accounting implied by Bolivia's household survey. Once we impose proper double-entry accounting — crediting owner and family labour at the minimum wage, charging depreciation on productive assets, and adding informal interest payments hidden from survey enumerators — <span class="kf red">57% of firms become loss-making</span>. The median accounting gap is <span class="kf">Bs 1,191/week</span>, driven 88% by unpaid labour. This is not a modelling choice: it follows directly from hours worked (median 55 hrs/week) valued at Bs 13.64/hr. The waterfall chart below shows exactly how the gap is constructed — revenue, subtract each cost layer, arrive at conventional profit, then subtract the three invisible costs to reach the adjusted truth.
-  </div>
-  <div class="typology-legend" id="typo-legend">
-    <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div><span id="leg-1">I — Viable (profit &gt; 0, low debt)</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:#e67e22"></div><span id="leg-2">II — Precaria (loss-making, low debt = disguised unemployment)</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:#8e44ad"></div><span id="leg-3">III — Debt-trapped (profit &gt; 0, high debt)</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div><span id="leg-4">IV — Critical risk (loss + high debt)</span></div>
-  </div>
-  <div class="g2">
-    <div class="chart-box">
-      <div class="chart-title" id="ct-dist">Distribution of adjusted net income (Bs/week)</div>
-      <div id="chart-dist"></div>
-      <div class="chart-note" id="cn-dist">Red bars = loss-making firms after full cost accounting. Green bars = profitable. The black dotted line marks zero. Notice how the red mass extends far to the left — many of these firms are deeply loss-making, not just marginally so.</div>
+        <footer>
+            <p>The opinions expressed do not reflect the position of affiliated institutions. All errors are the author's.</p>
+            <p style="margin-top: 1rem;">
+                <a href="https://wernerhl.github.io">wernerhl.github.io</a> · 
+                <a href="mailto:wernerhl@gmail.com">wernerhl@gmail.com</a>
+            </p>
+        </footer>
     </div>
-    <div class="chart-box">
-      <div class="chart-title" id="ct-sectorpct">% profitable by sector — conventional (survey) vs adjusted (diary)</div>
-      <div id="chart-sector-pct"></div>
-      <div class="chart-note" id="cn-sectorpct">Light bar = survey-implied profitability (always 100%). Dark bar = true adjusted profitability. Food service collapses to ~20%: 8 in 10 of these workers — overwhelmingly women — are operating at an economic loss.</div>
-    </div>
-  </div>
-  <div class="g2">
-    <div class="chart-box">
-      <div class="chart-title" id="ct-waterfall">Accounting gap — where does it come from? (median, Bs/week)</div>
-      <div id="chart-waterfall"></div>
-      <div class="chart-note" id="cn-waterfall">Read left to right: start with revenue, subtract each recorded cost to reach conventional profit (blue), then subtract the three invisible adjustments. Imputed labour alone erases the entire conventional profit and pushes the median firm into loss.</div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title" id="ct-typosector">Firm typology composition by sector (% of firms in each sector)</div>
-      <div id="chart-typology-sector"></div>
-      <div class="chart-note" id="cn-typosector">Transport is the only sector where Viable firms are the majority. Food service and Admin are dominated by Precaria — workers who generate positive cash flow but earn below the minimum wage economically.</div>
-    </div>
-  </div>
-</div>
-
-<!-- §3 FIRM MAP -->
-<div class="section-block" id="sec-scatter">
-  <div class="section-header"><span class="sec-num">§3</span><h2 id="s3-title">Firm Map — Every Firm in One View</h2></div>
-  <div class="explainer" id="s3-exp">
-    <strong>How to read this chart.</strong> Each dot is one of the 300 firms. The <strong>vertical axis</strong> shows adjusted net income — above the zero line is profitable, below is loss-making. The <strong>horizontal axis</strong> shows the firm's interest burden as a share of revenue — the further right, the more debt-stressed. <strong>Dot size</strong> reflects weekly hours worked: bigger dot = more hours. The four typologies emerge naturally from the two axes. The dotted horizontal line marks the minimum-wage-equivalent weekly earnings. The dotted vertical line at 10% marks the debt-stress threshold. <strong>Hover over any firm</strong> to see its full profile.
-  </div>
-  <div class="g1">
-    <div class="chart-box">
-      <div class="chart-title" id="ct-scatter">Each dot = one firm · vertical = adjusted profit · horizontal = interest burden · size = weekly hours · hover for details</div>
-      <div id="chart-scatter" style="height:460px"></div>
-      <div class="chart-note" id="cn-scatter">The four colour zones define the typology. Most firms cluster in the left half (low debt), split above and below zero profit. The Critical Risk cluster (bottom right, red) are firms that are both loss-making and heavily indebted to informal moneylenders.</div>
-    </div>
-  </div>
-</div>
-
-<!-- §4 PERSISTENCE -->
-<div class="section-block" id="sec-persist">
-  <div class="section-header"><span class="sec-num">§4</span><h2 id="s4-title">Why Loss-Making Firms Keep Operating</h2></div>
-  <div class="explainer" id="s4-exp">
-    <strong>The puzzle and its answer.</strong> If 57% of firms have negative adjusted income, why don't they close? The answer is not irrationality — it is six distinct mechanisms visible in the diary. The most fundamental is shown in the first chart: <span class="kf red">100% of loss-making firms have positive operating cash flow</span> (median Bs 807/week). The accounting loss is entirely non-cash — imputed labour never leaves the till, depreciation is never invoiced. The firm feels viable from the inside. The second chart shows the hourly return reality: most workers earn below the minimum wage, but the outside option (formal employment) largely does not exist in Bolivia's labour market, so quitting means zero income, not a better job. The third chart shows the household liquidity function: all 300 firms make daily cash draws for household consumption — the firm is the family's bank account, and closing it destroys the household's primary liquidity mechanism.
-  </div>
-  <div class="g3">
-    <div class="chart-box">
-      <div class="chart-title" id="ct-cfni">Mechanism 1: cash flow vs adjusted profit — loss-making firms only</div>
-      <div id="chart-cf-vs-ni"></div>
-      <div class="chart-note" id="cn-cfni">Every dot is above the red zero line — all 171 loss-making firms have positive operating cash flow. The accounting loss exists only on paper, not in the cash register. This is why owners do not perceive their own losses.</div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title" id="ct-hourly">Mechanism 2: hourly adjusted return vs minimum wage (Bs/hr)</div>
-      <div id="chart-hourly"></div>
-      <div class="chart-note" id="cn-hourly">Red = earning a negative return per hour worked. Amber = earning something, but below the legal minimum wage. Green = above. The vertical line marks Bs 13.64/hr — Bolivia's statutory minimum. Most workers fall in the red or amber zone.</div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title" id="ct-extract">Mechanism 3: household extraction rate (% of weekly revenue withdrawn)</div>
-      <div id="chart-extraction"></div>
-      <div class="chart-note" id="cn-extract">All 300 firms make daily withdrawals from the firm's cash for household use (median 10.1% of weekly revenue). The informal firm is the household's current account, savings account, and emergency fund simultaneously. Closing it destroys this.</div>
-    </div>
-  </div>
-</div>
-
-<!-- §5 SURVEY vs DIARY -->
-<div class="section-block" id="sec-survey">
-  <div class="section-header"><span class="sec-num">§5</span><h2 id="s5-title">Survey vs Diary — The Measurement Gap</h2></div>
-  <div class="explainer" id="s5-exp">
-    <strong>What the survey misses.</strong> Bolivia's <em>Encuesta de Hogares</em> asks the self-employed to recall annual revenue and eight cost categories. The diary records every transaction for seven consecutive days with double-entry discipline. The comparison reveals a <strong>compound measurement error of ambiguous sign</strong>: surveys omit costs (which inflates measured profit) but also under-record revenue (which deflates it), and the net direction varies by sector. This means you cannot fix the bias by applying a single correction factor — the error is structural. The scorecard result: <span class="kf red">13 of 24 financial concepts</span> needed to compute true profit are entirely absent from the survey instrument, including all four that determine whether a firm is above or below the loss threshold.
-  </div>
-  <div class="g2">
-    <div class="chart-box">
-      <div class="chart-title" id="ct-ehvsdiary">EH survey vs diary-adjusted annual net income — one dot per firm (Bs/year)</div>
-      <div id="chart-eh-vs-diary"></div>
-      <div class="chart-note" id="cn-ehvsdiary">Points on the 45° line: survey and diary agree. Points below the line: survey overstates net income (cost omission dominates). Points above: diary detects more income than the survey (revenue under-declaration dominates). The majority of points fall below the line.</div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title" id="ct-ratiosector">Diary-to-EH income ratio by sector (1.0 = perfect agreement)</div>
-      <div id="chart-ratio-sector"></div>
-      <div class="chart-note" id="cn-ratiosector">Green bar = diary income exceeds survey income (survey under-counts). Red bar = survey income exceeds diary income (survey overcounts due to cost omission). The direction differs by sector — proving the bias is not a simple scalar and cannot be fixed with a uniform adjustment.</div>
-    </div>
-  </div>
-</div>
-
-<!-- §6 RATIOS -->
-<div class="section-block" id="sec-ratios">
-  <div class="section-header"><span class="sec-num">§6</span><h2 id="s6-title">Financial Ratios &amp; Going-Concern Value</h2></div>
-  <div class="explainer" id="s6-exp">
-    <strong>Corporate finance applied to informal firms.</strong> For the first time, the full battery of financial ratios used in corporate analysis is computed from transaction-level data for informal enterprises. Return on Assets (ROA) collapses dramatically once labour is properly accounted for. The most striking result is Tobin's Q for the viable minority: the going-concern present value (discounted at the informal-sector rate of 18%) exceeds book value of physical assets by a median factor of <span class="kf green">83×</span>. This invisible capital — the market stall location, loyal customers, operational knowledge — is real. It is what formalisation policy promises to unlock. The debt chart reveals a two-tier credit market: regulated lenders (IFD/cooperatives) at ~25% EAR, and informal moneylenders (<em>prestamistas</em>) at a median of 201% EAR — which Bolivia's household survey fails to detect in 97% of cases.
-  </div>
-  <div class="g3">
-    <div class="chart-box">
-      <div class="chart-title" id="ct-roa">Return on assets — conventional (survey) vs adjusted (diary), annualised %</div>
-      <div id="chart-roa"></div>
-      <div class="chart-note" id="cn-roa">Blue = ROA as the survey implies (always positive, often very high). Red = true adjusted ROA from the diary. The adjustment shifts the distribution sharply leftward — most firms move from apparently high returns to zero or negative territory.</div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title" id="ct-tobin">Tobin's Q — going-concern present value ÷ book assets (viable firms only)</div>
-      <div id="chart-tobin"></div>
-      <div class="chart-note" id="cn-tobin">Q = 1 means the firm is worth exactly its physical assets. Q = 83 (median) means the firm's location, clients, and knowledge are worth 82× more than its tools and inventory. This invisible capital cannot be collateralised or transferred without formal title.</div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title" id="ct-ear">Effective annual interest rate (EAR) by lender type</div>
-      <div id="chart-ear"></div>
-      <div class="chart-note" id="cn-ear">Box = interquartile range, line = median, dot = mean. IFD/cooperatives lend at ~25% EAR. Informal moneylenders charge a median of 201% EAR. Bolivia's Encuesta de Hogares detects only 3% of true debt — a detection rate of 7 in 100 cases.</div>
-    </div>
-  </div>
-</div>
-
-<!-- §7 TAX SIMULATOR -->
-<div class="section-block" id="sec-tax">
-  <div class="section-header"><span class="sec-num">§7</span><h2 id="s7-title">Tax Policy Simulator — IVA Incidence</h2></div>
-  <div class="explainer" id="s7-exp">
-    <strong>What the slider does.</strong> Bolivia's IVA (value-added tax / sales tax) is currently 13%. The slider lets you explore what happens at any rate from 0% to 25%. The IVA is applied to gross revenue, which means it is levied regardless of whether the firm is actually profitable. For a <span class="kf green">Viable firm</span>, it reduces profit but may not cause a loss. For a <span class="kf amber">Precaria firm</span> already earning negative adjusted income, the IVA further deepens the loss — the tax falls on a worker who is already earning below the minimum wage. Note the baseline at 0%: even with no tax at all, 57% of firms are already loss-making. The IVA does not create the disguised unemployment problem — but it intensifies it.
-  </div>
-  <div class="tax-panel">
-    <div class="tax-header" id="tax-head">Drag the slider to change the IVA rate — charts update instantly</div>
-    <div class="tax-controls">
-      <div class="filter-group">
-        <label id="iva-lbl">IVA rate</label>
-        <input type="range" id="iva-slider" min="0" max="25" value="13" step="1" oninput="updateIVA()">
-        <span id="iva-val" style="font-family:'IBM Plex Mono',monospace;font-weight:500;min-width:32px">13%</span>
-      </div>
-      <div class="tax-result" id="iva-result">Loading…</div>
-    </div>
-  </div>
-  <div class="g2">
-    <div class="chart-box">
-      <div class="chart-title" id="ct-ivacascade">Share of firms in loss at each IVA rate (0–25%)</div>
-      <div id="chart-iva-cascade"></div>
-      <div class="chart-note" id="cn-ivacascade">The curve shows what share of firms would be loss-making at each possible IVA rate. The red dashed line marks the current rate. The curve starts at 57% even at 0% — that is the pre-tax disguised unemployment baseline. Each point upward on the curve represents workers newly pushed below zero by taxation.</div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title" id="ct-ivascatter">Pre-IVA vs post-IVA adjusted net income per firm (Bs/week)</div>
-      <div id="chart-iva-scatter"></div>
-      <div class="chart-note" id="cn-ivascatter">Each dot is one firm. The 45° line is where pre- and post-IVA incomes are equal (zero-tax benchmark). Every firm falls below this line — the IVA always reduces profit. Firms that cross the horizontal zero line are pushed into loss by the tax.</div>
-    </div>
-  </div>
-</div>
-
-<!-- §8 EXPLORER -->
-<div class="section-block" id="sec-explorer">
-  <div class="section-header"><span class="sec-num">§8</span><h2 id="s8-title">Firm Explorer — Browse All 300 Firms</h2></div>
-  <div class="explainer" id="s8-exp">
-    <strong>Individual firm data.</strong> Click any column header to sort. Use the filters at the top to narrow the selection. Reading guide for each column: <em>Profit conv.</em> = what the survey would record (always positive — this is the measurement illusion); <em>Profit adj.</em> = true economic profit (red = loss-making); <em>Labour imp.</em> = the invisible cost that the survey misses entirely — owner and family time valued at the legal minimum wage; <em>Cash flow</em> = actual weekly cash generated (always positive, even for loss-making firms — this is why firms survive); <em>Int. burden</em> = interest payments as % of revenue; <em>MW mult.</em> = hourly adjusted return ÷ minimum wage (below 1.0× means earning less per hour than a legal minimum-wage worker).
-  </div>
-  <div class="chart-box">
-    <div class="chart-title" id="ct-table">All firms — click column headers to sort · showing up to 100 rows · use filters above to narrow</div>
-    <div class="table-wrapper"><table><thead><tr id="table-head"></tr></thead><tbody id="table-body"></tbody></table></div>
-    <div class="chart-note" style="margin-top:0.6rem" id="cn-table">Profit adj. in red = this firm is loss-making after proper cost accounting. MW mult. below 1.0× = this worker earns less per hour than Bolivia's statutory minimum wage. Cash flow is always positive — this is the survival mechanism.</div>
-  </div>
-</div>
-
-</main>
-
-<footer>
-  <span id="footer-txt">Seven-day financial diary of 300 informal firms in Bolivia (2025). Methodology: Hernani-Limarino (2026) "Ledgers of the Self-Employed: Accounting for the Invisible Firm." Shadow wage = Bs 13.64/hr (statutory minimum). Informal discount rate = 18%.</span>
-  &nbsp;·&nbsp; <a href="https://github.com/wernerhl/ledgers-bolivia" target="_blank">GitHub</a>
-  &nbsp;·&nbsp; <a href="mailto:wernerhl@gmail.com">wernerhl@gmail.com</a>
-</footer>
-
-<script>
-// ══════════════════════════════════════════════════════════
-// TRANSLATIONS
-// ══════════════════════════════════════════════════════════
-const TR = {
-  en: {
-    'h-kicker':       'Research Dashboard · Informal Firm Accounting · Bolivia 2025',
-    'h-subtitle-em':  'Accounting for the Invisible Firm',
-    'h-subtitle':     'A seven-day financial diary with full double-entry accounting across 300 informal firms in four Bolivian cities. The central finding: household surveys report 100% of the self-employed as profitable. Under proper cost accounting, 57% are loss-making. Explore the data.',
-    'h-txn':          '14,902 transactions',
-    'h-scope':        '6 sectors · 4 cities',
-    'h-wage':         'Shadow wage: Bs 13.64/hr',
-    'nav-1':'§1 Overview','nav-2':'§2 Profit Reversal','nav-3':'§3 Firm Map','nav-4':'§4 Why Firms Persist','nav-5':'§5 Survey vs Diary','nav-6':'§6 Financial Ratios','nav-7':'§7 Tax Simulator','nav-8':'§8 Firm Explorer',
-    'fl-sector':'Sector','fl-city':'City','fl-gender':'Gender','fl-type':'Typology','fl-poor':'Poverty',
-    'fo-all-s':'All sectors','fo-all-c':'All cities','fo-all-g':'All','fo-f':'Female','fo-m':'Male','fo-all-t':'All types','fo-cr':'IV — Critical risk','fo-poor':'Poor','fo-nonpoor':'Non-poor',
-    'btn-reset':'↺ Reset',
-    's1-title':'Overview',
-    's1-exp':'<strong>What you are looking at.</strong> These headline numbers summarise the firms currently selected by the filters above. The most important contrast is between two accounting frameworks: <span class="kf">Conventional</span> — what Bolivia\'s household survey (<em>Encuesta de Hogares</em>) records, which is always positive — and <span class="kf red">Adjusted</span> — what you get when you add owner labour, family labour, depreciation, and informal debt service at the legal minimum wage. Use the filters to compare sectors, cities, or gender groups in real time.',
-    's2-title':'The Profit Reversal',
-    's2-exp':'<strong>The central finding.</strong> Every firm appears profitable under the conventional accounting implied by Bolivia\'s household survey. Once we impose proper double-entry accounting — crediting owner and family labour at the minimum wage, charging depreciation on productive assets, and adding informal interest payments hidden from survey enumerators — <span class="kf red">57% of firms become loss-making</span>. The median accounting gap is <span class="kf">Bs 1,191/week</span>, driven 88% by unpaid labour. The waterfall chart shows exactly how the gap is constructed.',
-    'leg-1':'I — Viable (profit > 0, low debt)','leg-2':'II — Precaria (loss-making, low debt = disguised unemployment)','leg-3':'III — Debt-trapped (profit > 0, high debt)','leg-4':'IV — Critical risk (loss + high debt)',
-    'ct-dist':'Distribution of adjusted net income (Bs/week)',
-    'cn-dist':'Red = loss-making after full cost accounting. Green = profitable. Dotted line = zero. Many loss-making firms are deeply negative — not just marginally below zero.',
-    'ct-sectorpct':'% profitable by sector — conventional (survey) vs adjusted (diary)',
-    'cn-sectorpct':'Light bar = survey-implied profitability (always 100%). Dark bar = true adjusted profitability. Food service collapses to ~20%: 8 in 10 workers, overwhelmingly women, operate at an economic loss.',
-    'ct-waterfall':'Accounting gap decomposition — where does it come from? (median Bs/week)',
-    'cn-waterfall':'Left to right: revenue → subtract recorded costs → conventional profit (blue) → subtract invisible adjustments → adjusted profit. Imputed labour alone erases conventional profit and pushes the median firm into loss.',
-    'ct-typosector':'Firm typology by sector (% of firms in each sector)',
-    'cn-typosector':'Transport is the only sector where Viable firms are the majority. Food service and Admin are dominated by Precaria — disguised unemployed workers who generate positive cash flow but earn below the minimum wage.',
-    's3-title':'Firm Map — Every Firm in One View',
-    's3-exp':'<strong>How to read this chart.</strong> Each dot is one of the 300 firms. The <strong>vertical axis</strong> = adjusted net income (above zero = profitable). The <strong>horizontal axis</strong> = interest burden as % of revenue (further right = more debt-stressed). <strong>Dot size</strong> = weekly hours worked. The four typologies emerge from the two axes. The dotted horizontal line marks minimum-wage-equivalent earnings. <strong>Hover over any dot</strong> for the full firm profile.',
-    'ct-scatter':'Each dot = one firm · vertical = adjusted profit · horizontal = interest burden · size = weekly hours · hover for details',
-    'cn-scatter':'The four colour zones define the typology. Critical Risk (bottom-right, red) are firms that are both loss-making and heavily indebted to informal moneylenders at 201% EAR.',
-    's4-title':'Why Loss-Making Firms Keep Operating',
-    's4-exp':'<strong>The puzzle and its answer.</strong> If 57% of firms are loss-making, why don\'t they close? The answer is six distinct mechanisms. Most fundamental: <span class="kf red">100% of loss-making firms have positive operating cash flow</span> (median Bs 807/week). The loss is entirely non-cash — imputed labour never leaves the till. Beyond that: the outside option (formal employment) does not exist for most; the firm is the household\'s primary liquidity buffer; debt traps prevent exit for Critical Risk firms; and some firms are rationally liquidating invisible assets over time.',
-    'ct-cfni':'Mechanism 1 — cash flow vs adjusted profit (loss-making firms only)',
-    'cn-cfni':'All 171 loss-making firms sit above the red zero line — positive cash flow despite negative economic profit. The loss exists only in the accounts, not in the daily experience of the worker.',
-    'ct-hourly':'Mechanism 2 — hourly adjusted return vs minimum wage (Bs/hr)',
-    'cn-hourly':'Red = negative return per hour. Amber = positive but below min wage. Green = above min wage. Vertical line = Bs 13.64/hr (Bolivia\'s statutory minimum). Most workers fall in red or amber.',
-    'ct-extract':'Mechanism 3 — household extraction rate (% of weekly revenue withdrawn for household use)',
-    'cn-extract':'All 300 firms withdraw daily cash for household consumption (median 10.1% of revenue). The firm is the family\'s bank account. Closing it destroys the household\'s primary liquidity mechanism.',
-    's5-title':'Survey vs Diary — The Measurement Gap',
-    's5-exp':'<strong>What the survey misses.</strong> Bolivia\'s <em>Encuesta de Hogares</em> asks the self-employed to recall annual revenue and eight cost categories. The diary records every transaction for seven consecutive days. The result: a <strong>compound bias of ambiguous sign</strong> — surveys omit costs (inflating profit) but also under-record revenue (deflating it), and the net direction varies by sector. You cannot fix this with a uniform adjustment factor. The scorecard: <span class="kf red">13 of 24 financial concepts</span> needed for true profit are entirely absent from the survey.',
-    'ct-ehvsdiary':'EH survey vs diary-adjusted annual net income — one dot per firm (Bs/year)',
-    'cn-ehvsdiary':'Points on the 45° line: survey and diary agree. Below the line: survey overstates income (cost omission dominates). Above: diary finds more income (revenue under-declaration dominates). Most points are below — the survey inflates reported income.',
-    'ct-ratiosector':'Diary-to-EH income ratio by sector (1.0 = perfect agreement)',
-    'cn-ratiosector':'Green bar (ratio > 1) = diary finds more income than survey. Red bar (ratio < 1) = survey overstates net income due to cost omission. The direction differs by sector — the bias is structural, not uniform.',
-    's6-title':'Financial Ratios & Going-Concern Value',
-    's6-exp':'<strong>Corporate finance applied to informal firms.</strong> Return on Assets collapses once labour is properly accounted for. The standout result is Tobin\'s Q for viable firms: going-concern PV ÷ book assets = median <span class="kf green">83×</span>. This invisible capital — location, clients, know-how — is real but cannot be collateralised without formalisation. The debt chart reveals a two-tier credit market: IFD/cooperatives at ~25% EAR vs informal moneylenders at 201% EAR — which the household survey detects in only 3% of cases.',
-    'ct-roa':'Return on Assets — conventional (survey) vs adjusted (diary), annualised %',
-    'cn-roa':'Blue = survey-implied ROA (always positive, often unrealistically high). Red = diary-adjusted ROA. The adjustment shifts the distribution sharply into negative territory for most firms.',
-    'ct-tobin':'Tobin\'s Q — going-concern PV ÷ book assets (viable firms only)',
-    'cn-tobin':'Q = 1: firm is worth its physical assets. Q = 83 (median): location, clients, and know-how are worth 82× more than tools and inventory. This invisible capital is the informal firm\'s greatest asset — and its greatest exit barrier.',
-    'ct-ear':'Effective annual interest rate (EAR) by lender type',
-    'cn-ear':'Box = interquartile range, line = median. IFD/cooperatives: ~25% EAR. Prestamistas: median 201% EAR. The EH survey detects this debt in only 3% of cases — a detection rate of 7 per 100.',
-    's7-title':'Tax Policy Simulator — IVA Incidence',
-    's7-exp':'<strong>What the slider does.</strong> Bolivia\'s IVA is currently 13%. Drag to explore any rate from 0% to 25%. The IVA hits gross revenue regardless of profitability. For a <span class="kf green">Viable firm</span>, it reduces profit. For a <span class="kf amber">Precaria firm</span> already in loss, it deepens the loss further — taxing a worker already below the minimum wage. Note: even at 0% IVA, 57% of firms are already loss-making. The tax does not create disguised unemployment — it deepens it.',
-    'tax-head':'Drag the slider — charts update instantly',
-    'iva-lbl':'IVA rate',
-    'ct-ivacascade':'Share of firms in loss at each IVA rate (0–25%)',
-    'cn-ivacascade':'The curve shows the % of firms in loss at each possible IVA rate. The red dashed line marks the current rate. The curve starts at 57% even at 0% — that is the pre-tax baseline. Each point upward = more workers newly pushed below zero by taxation.',
-    'ct-ivascatter':'Pre-IVA vs post-IVA adjusted net income per firm (Bs/week)',
-    'cn-ivascatter':'Each dot = one firm. The 45° line = no-tax benchmark. All firms fall below it. Firms crossing the horizontal zero axis are pushed into loss by the tax. Colour = typology.',
-    's8-title':'Firm Explorer — Browse All 300 Firms',
-    's8-exp':'<strong>Individual firm data.</strong> Click any column header to sort. <em>Profit conv.</em> = survey-implied profit (always positive — the measurement illusion). <em>Profit adj.</em> = true economic profit (red = loss-making). <em>Labour imp.</em> = the invisible cost the survey misses. <em>Cash flow</em> = actual weekly cash (always positive — this is how firms survive). <em>Int. burden</em> = interest payments as % of revenue. <em>MW mult.</em> = hourly return ÷ minimum wage (below 1.0× = earning less than min-wage worker).',
-    'ct-table':'All firms — click column headers to sort · up to 100 rows shown · use filters to narrow',
-    'cn-table':'Profit adj. in red = loss-making after proper accounting. MW mult. below 1.0× = earns less per hour than Bolivia\'s minimum wage. Cash flow is always positive — the survival mechanism.',
-    'footer-txt':'Seven-day financial diary of 300 informal firms in Bolivia (2025). Methodology: Hernani-Limarino (2026) "Ledgers of the Self-Employed: Accounting for the Invisible Firm." Shadow wage = Bs 13.64/hr. Informal discount rate = 18%.',
-    'load-msg':'Loading 300 firms · 14,902 transactions…',
-    'n-firms': n => `${n} firm${n===1?'':'s'}`,
-    'typology': { 'I_Viable':'I — Viable','II_Precaria':'II — Precaria','III_Atrapada_deuda':'III — Debt-trapped','IV_Riesgo_critico':'IV — Critical risk' },
-    'conventional':'Conventional (survey)', 'adjusted':'Adjusted (diary)',
-    'profitable':'Profitable','lossMaking':'Loss-making',
-    'th-id':'ID','th-sector':'Sector','th-city':'City','th-gender':'Sex','th-type':'Type','th-hrs':'Hrs/wk',
-    'th-rev':'Revenue (Bs)','th-conv':'Profit conv.','th-adj':'Profit adj.','th-lab':'Labour imp.',
-    'th-cf':'Cash flow','th-int':'Int. burden','th-mw':'MW mult.',
-    'stat-loss-l':'% Loss-making','stat-loss-s':'adjusted accounting',
-    'stat-medni-l':'Median adj. profit','stat-medni-s':'per week',
-    'stat-medcf-l':'Median cash flow','stat-medcf-s':'operating / week',
-    'stat-hr-l':'Median hourly return','stat-hr-s':'vs min. wage Bs 13.64/hr',
-    'stat-mw-l':'% Below min. wage','stat-mw-s':'by hourly adjusted return',
-    'stat-gap-l':'Accounting gap','stat-gap-s':'median (survey − diary)',
-    'stat-debt-l':'% Indebted (true)','stat-debt-s':'diary-measured prevalence',
-    'stat-ear-l':'Median lending rate','stat-ear-s':'effective annual, indebted firms',
-    'stat-q-l':'Median Tobin Q','stat-q-s':'going-concern / book (viable)',
-    'stat-n-l':'N firms','stat-n-s':'in current selection',
-    'wf-labels':['Revenue','− COGS','− Opex','− Interest','= Conv. profit','− Labour imp.','− Deprec.','= Adj. profit'],
-    'week':'week','year':'year','firms':'firms',
-    'iva-result': (pct, n, total, newN) => `At <b>${pct}% IVA</b>: <b>${n}</b> firms (${(n/total*100).toFixed(0)}%) in loss · <b>${newN}</b> newly pushed under`,
-    'table-more': (shown, total) => `Showing ${shown} of ${total} — use filters above to narrow selection`,
-  },
-  es: {
-    'h-kicker':       'Panel de Investigación · Contabilidad de Firmas Informales · Bolivia 2025',
-    'h-subtitle-em':  'Contabilidad para la Firma Invisible',
-    'h-subtitle':     'Diario financiero de siete días con contabilidad de partida doble en 300 firmas informales de cuatro ciudades bolivianas. El hallazgo central: las encuestas de hogares reportan rentabilidad al 100% de los trabajadores independientes. Con contabilidad correcta, el 57% opera en pérdida. Explore los datos.',
-    'h-txn':          '14.902 transacciones',
-    'h-scope':        '6 sectores · 4 ciudades',
-    'h-wage':         'Salario sombra: Bs 13,64/hr',
-    'nav-1':'§1 Resumen','nav-2':'§2 Reversión','nav-3':'§3 Mapa de Firmas','nav-4':'§4 Por qué persisten','nav-5':'§5 Encuesta vs Diario','nav-6':'§6 Ratios Financieros','nav-7':'§7 Simulador IVA','nav-8':'§8 Explorador',
-    'fl-sector':'Sector','fl-city':'Ciudad','fl-gender':'Género','fl-type':'Tipología','fl-poor':'Pobreza',
-    'fo-all-s':'Todos los sectores','fo-all-c':'Todas las ciudades','fo-all-g':'Todos','fo-f':'Mujer','fo-m':'Hombre','fo-all-t':'Todos los tipos','fo-cr':'IV — Riesgo crítico','fo-poor':'Pobre','fo-nonpoor':'No pobre',
-    'btn-reset':'↺ Reiniciar',
-    's1-title':'Resumen General',
-    's1-exp':'<strong>Qué está viendo.</strong> Estos indicadores resumen las firmas actualmente seleccionadas por los filtros. El contraste clave es entre dos marcos contables: <span class="kf">Convencional</span> — lo que registra la Encuesta de Hogares de Bolivia, siempre positivo — y <span class="kf red">Ajustado</span> — lo que se obtiene al agregar el trabajo propio, el trabajo familiar, la depreciación y el servicio de deuda informal al salario mínimo legal. Use los filtros para comparar sectores, ciudades o grupos de género en tiempo real.',
-    's2-title':'La Reversión del Beneficio',
-    's2-exp':'<strong>El hallazgo central.</strong> Todas las firmas aparecen rentables bajo la contabilidad convencional implícita en la Encuesta de Hogares. Una vez que se impone contabilidad de partida doble — acreditando trabajo propio y familiar al salario mínimo, cargando depreciación sobre activos productivos y sumando pagos de intereses informales ocultos — <span class="kf red">el 57% de las firmas pasan a operar en pérdida</span>. La brecha contable mediana es de <span class="kf">Bs 1.191/semana</span>, impulsada en un 88% por el trabajo no remunerado. El gráfico de cascada muestra exactamente cómo se construye la brecha.',
-    'leg-1':'I — Viable (ganancia > 0, deuda baja)','leg-2':'II — Precaria (pérdida, deuda baja = desempleo encubierto)','leg-3':'III — Atrapada en deuda (ganancia > 0, deuda alta)','leg-4':'IV — Riesgo crítico (pérdida + deuda alta)',
-    'ct-dist':'Distribución del ingreso neto ajustado (Bs/semana)',
-    'cn-dist':'Rojo = pérdida tras contabilidad completa. Verde = rentable. Línea punteada = cero. Muchas firmas en pérdida están muy por debajo de cero, no solo marginalmente.',
-    'ct-sectorpct':'% rentable por sector — convencional (encuesta) vs ajustado (diario)',
-    'cn-sectorpct':'Barra clara = rentabilidad según encuesta (siempre 100%). Barra oscura = rentabilidad ajustada real. Gastronomía colapsa al ~20%: 8 de cada 10 trabajadoras operan en pérdida económica.',
-    'ct-waterfall':'Descomposición de la brecha contable — ¿de dónde viene? (mediana Bs/semana)',
-    'cn-waterfall':'De izquierda a derecha: ingresos → restar costos registrados → ganancia convencional (azul) → restar ajustes invisibles → ganancia ajustada. El trabajo imputado solo borra la ganancia convencional y lleva la firma a pérdida.',
-    'ct-typosector':'Tipología de firmas por sector (% de firmas en cada sector)',
-    'cn-typosector':'Transporte es el único sector donde las firmas Viables son mayoría. Gastronomía y Admin son dominadas por Precaria — trabajadoras con flujo de caja positivo pero ingreso económico negativo.',
-    's3-title':'Mapa de Firmas — Las 300 Firmas en Una Vista',
-    's3-exp':'<strong>Cómo leer este gráfico.</strong> Cada punto es una de las 300 firmas. El <strong>eje vertical</strong> = ingreso neto ajustado (sobre cero = rentable). El <strong>eje horizontal</strong> = carga de intereses como % de ingresos (más a la derecha = más estrés de deuda). El <strong>tamaño del punto</strong> = horas semanales trabajadas. Las cuatro tipologías emergen naturalmente de los dos ejes. <strong>Pase el cursor sobre cualquier punto</strong> para ver el perfil completo de la firma.',
-    'ct-scatter':'Cada punto = una firma · vertical = ganancia ajustada · horizontal = carga de intereses · tamaño = horas/semana · cursor para detalles',
-    'cn-scatter':'Los cuatro colores definen la tipología. Riesgo Crítico (abajo-derecha, rojo) son firmas que operan en pérdida y están fuertemente endeudadas con prestamistas informales al 201% EAR.',
-    's4-title':'Por Qué las Firmas en Pérdida Siguen Operando',
-    's4-exp':'<strong>El enigma y su respuesta.</strong> Si el 57% opera en pérdida, ¿por qué no cierran? La respuesta son seis mecanismos distintos. El más fundamental: <span class="kf red">el 100% de las firmas en pérdida tiene flujo de caja operativo positivo</span> (mediana Bs 807/semana). La pérdida es completamente no monetaria — el trabajo imputado nunca sale de la caja. Además: la opción exterior (empleo formal) no existe para la mayoría; la firma es el principal colchón de liquidez del hogar; las trampas de deuda impiden salir a las firmas de Riesgo Crítico.',
-    'ct-cfni':'Mecanismo 1 — flujo de caja vs ganancia ajustada (solo firmas en pérdida)',
-    'cn-cfni':'Las 171 firmas en pérdida están todas por encima de la línea roja — flujo de caja positivo a pesar de ganancia económica negativa. La pérdida existe solo en los libros, no en la experiencia diaria del trabajador.',
-    'ct-hourly':'Mecanismo 2 — retorno horario ajustado vs salario mínimo (Bs/hora)',
-    'cn-hourly':'Rojo = retorno negativo por hora. Ámbar = positivo pero bajo el salario mínimo. Verde = sobre el salario mínimo. Línea vertical = Bs 13,64/hr. La mayoría cae en rojo o ámbar.',
-    'ct-extract':'Mecanismo 3 — tasa de extracción del hogar (% de ingresos semanales retirados para uso familiar)',
-    'cn-extract':'Las 300 firmas retiran efectivo diariamente para consumo del hogar (mediana 10,1% de los ingresos). La firma informal es la cuenta bancaria de la familia. Cerrarla destruye el principal mecanismo de liquidez del hogar.',
-    's5-title':'Encuesta vs Diario — La Brecha de Medición',
-    's5-exp':'<strong>Qué omite la encuesta.</strong> La Encuesta de Hogares pide a los trabajadores independientes que recuerden ingresos anuales y ocho categorías de costos. El diario registra cada transacción durante siete días consecutivos. El resultado es un <strong>sesgo compuesto de signo ambiguo</strong>: las encuestas omiten costos (inflando el beneficio) pero también sub-registran ingresos (deflándolo), y la dirección varía por sector. No se puede corregir con un factor de ajuste uniforme. El marcador: <span class="kf red">13 de 24 conceptos financieros</span> necesarios para el beneficio real están completamente ausentes de la encuesta.',
-    'ct-ehvsdiary':'Ingreso neto anual EH vs diario ajustado — un punto por firma (Bs/año)',
-    'cn-ehvsdiary':'Puntos en la línea de 45°: encuesta y diario coinciden. Por debajo: la encuesta sobreestima (domina la omisión de costos). Por encima: el diario encuentra más ingresos (domina la subdeclaración). La mayoría está por debajo.',
-    'ct-ratiosector':'Razón ingreso diario/EH por sector (1,0 = acuerdo perfecto)',
-    'cn-ratiosector':'Barra verde (razón > 1) = el diario encuentra más ingresos que la encuesta. Barra roja (razón < 1) = la encuesta sobreestima el ingreso neto por omisión de costos. La dirección difiere por sector — el sesgo es estructural.',
-    's6-title':'Ratios Financieros y Valor de Negocio en Marcha',
-    's6-exp':'<strong>Finanzas corporativas aplicadas a firmas informales.</strong> El Retorno sobre Activos colapsa una vez que el trabajo se contabiliza correctamente. El resultado más sorprendente es la Q de Tobin para las firmas viables: el VP del negocio en marcha ÷ activos en libros = mediana <span class="kf green">83×</span>. Este capital invisible — ubicación, clientes, conocimiento — es real pero no puede ser colateralizado sin formalización. El gráfico de deuda revela un mercado de crédito de dos niveles: IFD/cooperativas al ~25% EAR vs prestamistas al 201% EAR — que la EH detecta solo en el 3% de los casos.',
-    'ct-roa':'Retorno sobre Activos — convencional (encuesta) vs ajustado (diario), % anualizado',
-    'cn-roa':'Azul = ROA según encuesta (siempre positivo, a menudo muy alto). Rojo = ROA ajustado real. El ajuste desplaza la distribución hacia territorio negativo para la mayoría de las firmas.',
-    'ct-tobin':'Q de Tobin — VP negocio en marcha ÷ activos en libros (solo firmas viables)',
-    'cn-tobin':'Q = 1: la firma vale sus activos físicos. Q = 83 (mediana): ubicación, clientes y conocimiento valen 82 veces más que herramientas e inventario. Este capital invisible es la mayor barrera de salida.',
-    'ct-ear':'Tasa de interés efectiva anual (EAR) por tipo de prestamista',
-    'cn-ear':'Caja = rango intercuartílico, línea = mediana. IFD/cooperativas: ~25% EAR. Prestamistas: mediana 201% EAR. La EH detecta esta deuda en solo el 3% de los casos — 7 de cada 100.',
-    's7-title':'Simulador de Política Fiscal — Incidencia del IVA',
-    's7-exp':'<strong>Qué hace el deslizador.</strong> El IVA de Bolivia es actualmente el 13%. Arrastre para explorar cualquier tasa del 0% al 25%. El IVA se aplica sobre los ingresos brutos, independientemente de la rentabilidad. Para una firma <span class="kf green">Viable</span>, reduce el beneficio. Para una firma <span class="kf amber">Precaria</span> que ya opera en pérdida, la profundiza — el impuesto recae sobre una trabajadora que ya gana bajo el salario mínimo. Nota: incluso al 0% de IVA, el 57% ya opera en pérdida. El IVA no crea el desempleo encubierto — lo profundiza.',
-    'tax-head':'Arrastre el deslizador — los gráficos se actualizan instantáneamente',
-    'iva-lbl':'Tasa IVA',
-    'ct-ivacascade':'Proporción de firmas en pérdida a cada tasa de IVA (0–25%)',
-    'cn-ivacascade':'La curva muestra el % de firmas en pérdida a cada tasa posible de IVA. La línea punteada roja marca la tasa actual. La curva comienza en 57% incluso al 0% — esa es la línea base pre-fiscal. Cada punto adicional = más trabajadores empujados bajo cero por el impuesto.',
-    'ct-ivascatter':'Ingreso neto ajustado pre-IVA vs post-IVA por firma (Bs/semana)',
-    'cn-ivascatter':'Cada punto = una firma. La línea de 45° = referencia sin impuesto. Todas las firmas caen por debajo. Las firmas que cruzan el eje horizontal cero son empujadas a pérdida por el impuesto.',
-    's8-title':'Explorador de Firmas — Las 300 Firmas',
-    's8-exp':'<strong>Datos por firma.</strong> Haga clic en cualquier encabezado para ordenar. <em>Gan. conv.</em> = ganancia según encuesta (siempre positiva — la ilusión de medición). <em>Gan. aj.</em> = ganancia económica real (rojo = pérdida). <em>Trabajo imp.</em> = el costo invisible que omite la encuesta. <em>Flujo caja</em> = efectivo semanal real (siempre positivo — el mecanismo de supervivencia). <em>Carga int.</em> = intereses como % de ingresos. <em>Múlt. SM</em> = retorno horario ÷ salario mínimo (menor a 1,0× = gana menos que el salario mínimo).',
-    'ct-table':'Todas las firmas — haga clic en los encabezados para ordenar · hasta 100 filas · use los filtros para reducir',
-    'cn-table':'Gan. aj. en rojo = pérdida tras contabilidad correcta. Múlt. SM bajo 1,0× = gana menos por hora que un trabajador con salario mínimo. Flujo de caja siempre positivo — el mecanismo de supervivencia.',
-    'footer-txt':'Diario financiero de siete días con 300 firmas informales en 300 firmas informales de Bolivia (2025). Metodología: Hernani-Limarino (2026) "Ledgers of the Self-Employed." Salario sombra = Bs 13,64/hr. Tasa de descuento informal = 18%.',
-    'load-msg':'Cargando 300 firmas · 14.902 transacciones…',
-    'n-firms': n => `${n} firma${n===1?'':'s'}`,
-    'typology': { 'I_Viable':'I — Viable','II_Precaria':'II — Precaria','III_Atrapada_deuda':'III — Atrapada en deuda','IV_Riesgo_critico':'IV — Riesgo crítico' },
-    'conventional':'Convencional (encuesta)', 'adjusted':'Ajustado (diario)',
-    'profitable':'Rentable','lossMaking':'En pérdida',
-    'th-id':'ID','th-sector':'Sector','th-city':'Ciudad','th-gender':'Sexo','th-type':'Tipo','th-hrs':'Hrs/sem',
-    'th-rev':'Ingresos (Bs)','th-conv':'Gan. conv.','th-adj':'Gan. aj.','th-lab':'Trabajo imp.',
-    'th-cf':'Flujo caja','th-int':'Carga int.','th-mw':'Múlt. SM',
-    'stat-loss-l':'% En pérdida','stat-loss-s':'contabilidad ajustada',
-    'stat-medni-l':'Gan. adj. mediana','stat-medni-s':'por semana',
-    'stat-medcf-l':'Flujo caja mediano','stat-medcf-s':'operativo / semana',
-    'stat-hr-l':'Retorno horario mediano','stat-hr-s':'vs salario mínimo Bs 13,64/hr',
-    'stat-mw-l':'% Bajo salario mínimo','stat-mw-s':'por retorno horario ajustado',
-    'stat-gap-l':'Brecha contable','stat-gap-s':'mediana (encuesta − diario)',
-    'stat-debt-l':'% Endeudado (real)','stat-debt-s':'prevalencia medida por diario',
-    'stat-ear-l':'Tasa de préstamo mediana','stat-ear-s':'efectiva anual, firmas endeudadas',
-    'stat-q-l':'Q de Tobin mediana','stat-q-s':'negocio en marcha / libro (viables)',
-    'stat-n-l':'N firmas','stat-n-s':'en selección actual',
-    'wf-labels':['Ingresos','− CMV','− Gastos op.','− Intereses','= Gan. conv.','− Trabajo imp.','− Deprec.','= Gan. ajustada'],
-    'week':'semana','year':'año','firms':'firmas',
-    'iva-result': (pct, n, total, newN) => `Al <b>${pct}% IVA</b>: <b>${n}</b> firmas (${(n/total*100).toFixed(0)}%) en pérdida · <b>${newN}</b> nuevas en pérdida`,
-    'table-more': (shown, total) => `Mostrando ${shown} de ${total} — use los filtros para reducir la selección`,
-  }
-};
-
-let LANG = 'en';
-function t(key) { return TR[LANG][key] || TR.en[key] || key; }
-function tl(key) { return (TR[LANG].typology||{})[key] || key; }
-
-function setLang(lang) {
-  LANG = lang;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === lang.toUpperCase()));
-  const ids = Object.keys(TR.en).filter(k => typeof TR.en[k] === 'string');
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const val = TR[LANG][id] || TR.en[id];
-    if (val.includes('<')) el.innerHTML = val;
-    else el.textContent = val;
-  });
-  if (rawData.length) renderAll();
-}
-
-// ══════════════════════════════════════════════════════════
-// DATA & STATE
-// ══════════════════════════════════════════════════════════
-let rawData = [], filteredData = [];
-let sortCol = 'net_income_adjusted', sortAsc = true;
-let ivaRate = 0.13;
-
-const TC = { 'I_Viable':'#27ae60','II_Precaria':'#e67e22','III_Atrapada_deuda':'#8e44ad','IV_Riesgo_critico':'#c0392b' };
-const BL = {
-  margin:{t:10,r:12,b:42,l:58}, paper_bgcolor:'white', plot_bgcolor:'white',
-  font:{family:'IBM Plex Sans, sans-serif',size:11,color:'#333'},
-  xaxis:{gridcolor:'#f0f0f0',zerolinecolor:'#ccc'},
-  yaxis:{gridcolor:'#f0f0f0',zerolinecolor:'#ccc'},
-  showlegend:false,
-};
-const CFG = {responsive:true,displayModeBar:false};
-
-function median(arr) {
-  const s=[...arr].filter(isFinite).sort((a,b)=>a-b);
-  const m=Math.floor(s.length/2);
-  return s.length%2?s[m]:(s[m-1]+s[m])/2;
-}
-
-// ══════════════════════════════════════════════════════════
-// LOAD
-// ══════════════════════════════════════════════════════════
-async function loadData() {
-  return new Promise((res,rej)=>{
-    Papa.parse('data/ledgers_dashboard_data.csv',{
-      download:true,header:true,dynamicTyping:true,
-      complete:r=>res(r.data.filter(d=>d.firm_id)),error:rej
-    });
-  });
-}
-
-// ══════════════════════════════════════════════════════════
-// FILTERS
-// ══════════════════════════════════════════════════════════
-function applyFilters(){
-  const s=document.getElementById('f-sector').value;
-  const c=document.getElementById('f-city').value;
-  const g=document.getElementById('f-gender').value;
-  const ty=document.getElementById('f-type').value;
-  const p=document.getElementById('f-poor').value;
-  filteredData=rawData.filter(d=>{
-    if(s&&d.sector_en!==s)return false;
-    if(c&&!d.city.includes(c.split('/')[0].trim()))return false;
-    if(g&&d.gender!==g)return false;
-    if(ty&&d.typology!==ty)return false;
-    if(p==='true'&&!d.is_poor)return false;
-    if(p==='false'&&d.is_poor)return false;
-    return true;
-  });
-  document.getElementById('n-firms-label').textContent=t('n-firms')(filteredData.length);
-  renderAll();
-}
-function resetFilters(){
-  ['f-sector','f-city','f-gender','f-type','f-poor'].forEach(id=>document.getElementById(id).value='');
-  applyFilters();
-}
-['f-sector','f-city','f-gender','f-type','f-poor'].forEach(id=>
-  document.getElementById(id).addEventListener('change',applyFilters));
-
-// ══════════════════════════════════════════════════════════
-// STATS
-// ══════════════════════════════════════════════════════════
-function renderStats(){
-  const d=filteredData; if(!d.length)return;
-  const ni=d.map(r=>r.net_income_adjusted).filter(isFinite);
-  const cf=d.map(r=>r.cash_flow_operating).filter(isFinite);
-  const hr=d.map(r=>r.hourly_return_adjusted_bs).filter(isFinite);
-  const gap=d.map(r=>r.accounting_gap_bs).filter(isFinite);
-  const indD=d.filter(r=>r.has_debt_true&&r.effective_annual_rate>0);
-  const viable=d.filter(r=>r.typology==='I_Viable'&&r.tobin_q_g0>0&&r.tobin_q_g0<500);
-  const pL=(d.filter(r=>r.net_income_adjusted<0).length/d.length*100).toFixed(0)+'%';
-  const pMW=(d.filter(r=>r.mw_multiple<1).length/d.length*100).toFixed(0)+'%';
-  const pDbt=(d.filter(r=>r.has_debt_true).length/d.length*100).toFixed(0)+'%';
-  const mEAR=indD.length?(median(indD.map(r=>r.effective_annual_rate))*100).toFixed(0)+'%':'—';
-  const mQ=viable.length?median(viable.map(r=>r.tobin_q_g0)).toFixed(0)+'×':'—';
-  const cards=[
-    {k:'loss',v:pL,c:'red'},{k:'medni',v:'Bs '+median(ni).toFixed(0),c:median(ni)<0?'red':'green'},
-    {k:'medcf',v:'Bs '+median(cf).toFixed(0),c:'green'},
-    {k:'hr',v:'Bs '+median(hr).toFixed(1)+'/hr',c:median(hr)<0?'red':'green'},
-    {k:'mw',v:pMW,c:'amber'},{k:'gap',v:'Bs '+median(gap).toFixed(0),c:'blue'},
-    {k:'debt',v:pDbt,c:'amber'},{k:'ear',v:mEAR,c:'red'},
-    {k:'q',v:mQ,c:'blue'},{k:'n',v:d.length,c:''},
-  ];
-  document.getElementById('stat-grid').innerHTML=cards.map(c=>`
-    <div class="stat-card ${c.c}">
-      <div class="stat-label">${t('stat-'+c.k+'-l')}</div>
-      <div class="stat-value">${c.v}</div>
-      <div class="stat-sub">${t('stat-'+c.k+'-s')}</div>
-    </div>`).join('');
-}
-
-// ══════════════════════════════════════════════════════════
-// CHARTS
-// ══════════════════════════════════════════════════════════
-function renderDist(){
-  const d=filteredData;
-  const neg=d.filter(r=>r.net_income_adjusted<0).map(r=>r.net_income_adjusted);
-  const pos=d.filter(r=>r.net_income_adjusted>=0).map(r=>r.net_income_adjusted);
-  Plotly.newPlot('chart-dist',[
-    {x:neg,type:'histogram',name:t('lossMaking'),marker:{color:'rgba(192,57,43,0.65)'},xbins:{size:100}},
-    {x:pos,type:'histogram',name:t('profitable'),marker:{color:'rgba(39,174,96,0.65)'},xbins:{size:100}},
-  ],{...BL,barmode:'overlay',xaxis:{...BL.xaxis,title:'Bs / '+t('week'),zeroline:true,zerolinewidth:2,zerolinecolor:'#333'},
-    yaxis:{...BL.yaxis,title:'#'},showlegend:true,legend:{x:0.6,y:1,font:{size:10}},
-    shapes:[{type:'line',x0:0,x1:0,y0:0,y1:1,yref:'paper',line:{color:'#1a1a1a',width:2,dash:'dot'}}]},CFG);
-}
-
-function renderSectorPct(){
-  const sectors=[...new Set(filteredData.map(r=>r.sector_en))].sort();
-  const adjP=sectors.map(s=>{const sub=filteredData.filter(r=>r.sector_en===s);return sub.filter(r=>r.net_income_adjusted>0).length/sub.length*100;});
-  Plotly.newPlot('chart-sector-pct',[
-    {name:t('conventional'),x:sectors,y:sectors.map(()=>100),type:'bar',marker:{color:'rgba(41,128,185,0.22)',line:{color:'rgba(41,128,185,0.5)',width:1}},text:sectors.map(()=>'100%'),textposition:'outside',textfont:{size:10}},
-    {name:t('adjusted'),x:sectors,y:adjP,type:'bar',marker:{color:'rgba(41,128,185,0.85)'},text:adjP.map(v=>v.toFixed(0)+'%'),textposition:'outside',textfont:{size:10}},
-  ],{...BL,barmode:'group',yaxis:{...BL.yaxis,title:'%',range:[0,128]},showlegend:true,legend:{x:0.52,y:1,font:{size:10}}},CFG);
-}
-
-function renderWaterfall(){
-  const d=filteredData; const med=col=>median(d.map(r=>r[col]).filter(isFinite));
-  const rev=med('total_revenue_diary'),cogs=med('cogs'),opex=med('total_op_exp_conventional')-med('interest_paid'),
-    int=med('interest_paid'),lab=med('labor_imputed'),dep=med('depreciation_imputed'),
-    netC=med('net_income_conventional'),netA=med('net_income_adjusted');
-  Plotly.newPlot('chart-waterfall',[{type:'waterfall',x:t('wf-labels'),y:[rev,-cogs,-opex,-int,netC,-lab,-dep,netA],
-    connector:{line:{color:'#ddd'}},increasing:{marker:{color:'#27ae60'}},decreasing:{marker:{color:'#c0392b'}},totals:{marker:{color:'#2980b9'}},
-    texttemplate:'Bs %{y:,.0f}',textposition:'outside',textfont:{size:9},
-  }],{...BL,yaxis:{...BL.yaxis,title:'Bs/'+t('week')},margin:{...BL.margin,b:68,l:65}},CFG);
-}
-
-function renderTypologySector(){
-  const sectors=[...new Set(filteredData.map(r=>r.sector_en))].sort();
-  const types=['I_Viable','II_Precaria','III_Atrapada_deuda','IV_Riesgo_critico'];
-  Plotly.newPlot('chart-typology-sector',types.map(tp=>({
-    name:tl(tp),x:sectors,type:'bar',marker:{color:TC[tp]},
-    y:sectors.map(s=>{const sub=filteredData.filter(r=>r.sector_en===s);return sub.length?sub.filter(r=>r.typology===tp).length/sub.length*100:0;})
-  })),{...BL,barmode:'stack',yaxis:{...BL.yaxis,title:'%',range:[0,108]},
-    showlegend:true,legend:{x:0.45,y:1.22,orientation:'h',font:{size:9}},margin:{...BL.margin,b:72}},CFG);
-}
-
-function renderScatter(){
-  const d=filteredData; const MW=13.64*55;
-  const types=['I_Viable','II_Precaria','III_Atrapada_deuda','IV_Riesgo_critico'];
-  const traces=types.map(tp=>{
-    const sub=d.filter(r=>r.typology===tp);
-    return {name:tl(tp),x:sub.map(r=>Math.min(r.interest_burden_pct||0,45)),
-      y:sub.map(r=>Math.max(Math.min(r.net_income_adjusted||0,2000),-2500)),
-      mode:'markers',marker:{color:TC[tp],size:sub.map(r=>Math.max(5,Math.min(18,(r.total_hours_weekly||0)/5))),opacity:0.72,line:{color:'white',width:0.5}},
-      text:sub.map(r=>`<b>${r.firm_id}</b><br>${r.sector_en} · ${r.city} · ${r.gender}<br>Hrs/wk: ${r.owner_hours_weekly}<br>Revenue: Bs ${(r.total_revenue_diary||0).toFixed(0)}<br>Adj. profit: Bs ${(r.net_income_adjusted||0).toFixed(0)}<br>Labour imp.: Bs ${(r.labor_imputed||0).toFixed(0)}<br>Interest burden: ${(r.interest_burden_pct||0).toFixed(1)}%<br>MW multiple: ${(r.mw_multiple||0).toFixed(2)}×`),
-      hovertemplate:'%{text}<extra></extra>',
-    };
-  });
-  Plotly.newPlot('chart-scatter',traces,{...BL,showlegend:true,legend:{x:0.65,y:1,font:{size:10}},
-    xaxis:{...BL.xaxis,title:LANG==='es'?'Carga de intereses (% de ingresos)':'Interest burden (% of revenue)',range:[-0.5,47]},
-    yaxis:{...BL.yaxis,title:LANG==='es'?'Ingreso neto ajustado (Bs/semana)':'Adjusted net income (Bs/week)',zeroline:true,zerolinewidth:1.5},
-    shapes:[
-      {type:'line',x0:0,x1:45,y0:-MW,y1:-MW,line:{color:'#666',width:1.2,dash:'dot'}},
-      {type:'line',x0:10,x1:10,y0:-2600,y1:2200,line:{color:'#bbb',width:1,dash:'dash'}},
-    ]},CFG);
-}
-
-function renderPersistence(){
-  const d=filteredData; const loss=d.filter(r=>r.net_income_adjusted<0);
-  Plotly.newPlot('chart-cf-vs-ni',[{x:loss.map(r=>r.net_income_adjusted),y:loss.map(r=>r.cash_flow_operating),
-    mode:'markers',type:'scatter',marker:{color:loss.map(r=>TC[r.typology]||'#888'),size:6,opacity:0.75},
-    text:loss.map(r=>`${r.firm_id}<br>Adj: Bs ${r.net_income_adjusted.toFixed(0)}<br>CF: Bs ${r.cash_flow_operating.toFixed(0)}`),
-    hovertemplate:'%{text}<extra></extra>',
-  }],{...BL,
-    xaxis:{...BL.xaxis,title:LANG==='es'?'Ganancia ajustada (Bs/sem)':'Adj. profit (Bs/wk)'},
-    yaxis:{...BL.yaxis,title:LANG==='es'?'Flujo caja operativo (Bs/sem)':'Operating CF (Bs/wk)',rangemode:'tozero'},
-    shapes:[{type:'line',x0:-2500,x1:0,y0:0,y1:0,line:{color:'#c0392b',width:1.2,dash:'dot'}}]},CFG);
-
-  const hrs=d.map(r=>r.hourly_return_adjusted_bs).filter(v=>isFinite(v)&&v>-80&&v<80);
-  Plotly.newPlot('chart-hourly',[
-    {x:hrs.filter(v=>v<0),type:'histogram',name:t('lossMaking'),marker:{color:'rgba(192,57,43,0.72)'},xbins:{size:2}},
-    {x:hrs.filter(v=>v>=0&&v<13.64),type:'histogram',name:LANG==='es'?'Bajo SM':'Below MW',marker:{color:'rgba(230,126,34,0.72)'},xbins:{size:2}},
-    {x:hrs.filter(v=>v>=13.64),type:'histogram',name:LANG==='es'?'Sobre SM':'Above MW',marker:{color:'rgba(39,174,96,0.72)'},xbins:{size:2}},
-  ],{...BL,barmode:'stack',xaxis:{...BL.xaxis,title:'Bs / hr'},yaxis:{...BL.yaxis,title:'#'},
-    shapes:[{type:'line',x0:13.64,x1:13.64,y0:0,y1:1,yref:'paper',line:{color:'#2c3e50',width:1.5,dash:'dash'}}],
-    showlegend:true,legend:{x:0.45,y:1,font:{size:9}}},CFG);
-
-  const extr=d.map(r=>r.extraction_rate*100).filter(v=>isFinite(v)&&v>=0&&v<=50);
-  Plotly.newPlot('chart-extraction',[{x:extr,type:'histogram',marker:{color:'rgba(41,128,185,0.72)'},xbins:{size:1}}],
-    {...BL,xaxis:{...BL.xaxis,title:LANG==='es'?'Retiros hogar / ingresos (%)':'Household draws / revenue (%)'},yaxis:{...BL.yaxis,title:'#'},
-      shapes:[{type:'line',x0:10,x1:10,y0:0,y1:1,yref:'paper',line:{color:'#c0392b',width:1.5,dash:'dash'}}]},CFG);
-}
-
-function renderSurveyVsDiary(){
-  const d=filteredData.filter(r=>r.eh_yi_net_annual&&r.diary_yi_net_adj_annualized);
-  const types=['I_Viable','II_Precaria','III_Atrapada_deuda','IV_Riesgo_critico'];
-  const traces=types.map(tp=>{
-    const sub=d.filter(r=>r.typology===tp);
-    return {name:tl(tp),x:sub.map(r=>r.eh_yi_net_annual),y:sub.map(r=>r.diary_yi_net_adj_annualized),
-      mode:'markers',marker:{color:TC[tp],size:6,opacity:0.65},
-      text:sub.map(r=>`${r.firm_id}<br>EH: Bs ${(r.eh_yi_net_annual||0).toFixed(0)}<br>Diary: Bs ${(r.diary_yi_net_adj_annualized||0).toFixed(0)}`),
-      hovertemplate:'%{text}<extra></extra>'};
-  });
-  const xv=d.map(r=>r.eh_yi_net_annual).filter(isFinite);
-  const lim=Math.max(Math.abs(Math.min(...xv)),Math.max(...xv),50000);
-  traces.push({x:[-lim,lim],y:[-lim,lim],mode:'lines',name:'45°',line:{color:'#bbb',dash:'dot',width:1},hoverinfo:'skip'});
-  Plotly.newPlot('chart-eh-vs-diary',traces,{...BL,showlegend:true,legend:{x:0.02,y:0.98,font:{size:9}},
-    xaxis:{...BL.xaxis,title:LANG==='es'?'Ingreso neto anual EH (Bs)':'EH annual net income (Bs)'},
-    yaxis:{...BL.yaxis,title:LANG==='es'?'Ingreso neto anual diario aj. (Bs)':'Diary adjusted annual net income (Bs)'}},CFG);
-
-  const sectors=[...new Set(filteredData.map(r=>r.sector_en))].sort();
-  const ratios=sectors.map(s=>{const sub=filteredData.filter(r=>r.sector_en===s&&r.ratio_diary_eh_income);return sub.length?median(sub.map(r=>r.ratio_diary_eh_income)):null;});
-  Plotly.newPlot('chart-ratio-sector',[{x:ratios,y:sectors,type:'bar',orientation:'h',
-    marker:{color:ratios.map(v=>v>1?'rgba(39,174,96,0.75)':'rgba(192,57,43,0.75)')},
-    text:ratios.map(v=>v?.toFixed(2)),textposition:'outside',textfont:{size:10}}],
-    {...BL,xaxis:{...BL.xaxis,title:LANG==='es'?'Razón Diario / EH':'Diary / EH ratio'},
-      yaxis:{...BL.yaxis,automargin:true},margin:{...BL.margin,l:112},
-      shapes:[{type:'line',x0:1,x1:1,y0:-0.5,y1:sectors.length-0.5,line:{color:'#333',width:1.5,dash:'dash'}}]},CFG);
-}
-
-function renderRatios(){
-  const d=filteredData;
-  const roa_c=d.map(r=>Math.max(Math.min((r.roa_conventional||0)*100,1000),-100)).filter(isFinite);
-  const roa_a=d.map(r=>Math.max(Math.min((r.roa_adjusted||0)*100,500),-300)).filter(isFinite);
-  Plotly.newPlot('chart-roa',[
-    {x:roa_c,type:'histogram',name:t('conventional'),marker:{color:'rgba(41,128,185,0.42)'},xbins:{size:50}},
-    {x:roa_a,type:'histogram',name:t('adjusted'),marker:{color:'rgba(192,57,43,0.65)'},xbins:{size:50}},
-  ],{...BL,barmode:'overlay',xaxis:{...BL.xaxis,title:'ROA (% / '+t('year')+')'},yaxis:{...BL.yaxis,title:'#'},
-    shapes:[{type:'line',x0:0,x1:0,y0:0,y1:1,yref:'paper',line:{color:'#333',width:1.5}}],
-    showlegend:true,legend:{x:0.55,y:1,font:{size:10}}},CFG);
-
-  const viable=d.filter(r=>r.typology==='I_Viable'&&r.tobin_q_g0>0&&r.tobin_q_g0<500);
-  const mQ=viable.length?median(viable.map(r=>r.tobin_q_g0)):0;
-  Plotly.newPlot('chart-tobin',[{x:viable.map(r=>r.tobin_q_g0),type:'histogram',marker:{color:'rgba(39,174,96,0.75)'},xbins:{size:10}}],
-    {...BL,xaxis:{...BL.xaxis,title:"Tobin's Q"},yaxis:{...BL.yaxis,title:LANG==='es'?'# firmas viables':'# viable firms'},
-      shapes:[{type:'line',x0:mQ,x1:mQ,y0:0,y1:1,yref:'paper',line:{color:'#27ae60',width:2,dash:'dash'}}],
-      annotations:[{x:mQ+8,y:0.85,yref:'paper',text:`${LANG==='es'?'Mediana':'Median'}: ${mQ.toFixed(0)}×`,showarrow:false,font:{size:10,color:'#27ae60'}}]},CFG);
-
-  const indebted=d.filter(r=>r.has_debt_true&&r.effective_annual_rate>0&&r.effective_annual_rate<20);
-  const byType={};
-  indebted.forEach(r=>{const tp=r.debt_type_x||'Unknown';if(!byType[tp])byType[tp]=[];byType[tp].push(r.effective_annual_rate*100);});
-  Plotly.newPlot('chart-ear',Object.keys(byType).map((tp,i)=>({
-    y:byType[tp],type:'box',name:tp,boxmean:true,
-    marker:{color:['rgba(192,57,43,0.7)','rgba(41,128,185,0.7)','rgba(230,126,34,0.7)','rgba(39,174,96,0.7)'][i]||'#888'},
-  })),{...BL,yaxis:{...BL.yaxis,title:LANG==='es'?'Tasa efectiva anual (%)':'Effective annual rate (%)'},showlegend:false},CFG);
-}
-
-function updateIVA(){
-  ivaRate=document.getElementById('iva-slider').value/100;
-  document.getElementById('iva-val').textContent=Math.round(ivaRate*100)+'%';
-  renderIVA();
-}
-
-function renderIVA(){
-  const d=filteredData;
-  const rates=[0,2,4,5,8,10,12,13,15,18,20,22,25];
-  const pctL=rates.map(r=>d.filter(row=>(row.net_income_adjusted-row.total_revenue_diary*(r/100))<0).length/d.length*100);
-  const preN=d.filter(r=>r.net_income_adjusted<0).length;
-  const postN=d.filter(r=>(r.net_income_adjusted-r.total_revenue_diary*ivaRate)<0).length;
-  const newN=Math.max(0,postN-preN);
-  document.getElementById('iva-result').innerHTML=t('iva-result')(Math.round(ivaRate*100),postN,d.length,newN);
-
-  Plotly.newPlot('chart-iva-cascade',[{x:rates,y:pctL,type:'scatter',mode:'lines+markers',
-    line:{color:'#c0392b',width:2.5},fill:'tozeroy',fillcolor:'rgba(192,57,43,0.07)',
-    marker:{size:6,color:rates.map(r=>r===Math.round(ivaRate*100)?'#c0392b':'rgba(192,57,43,0.35)')},
-    hovertemplate:`IVA %{x}%: %{y:.1f}% ${LANG==='es'?'en pérdida':'in loss'}<extra></extra>`,
-  }],{...BL,xaxis:{...BL.xaxis,title:'IVA (%)',dtick:5},
-    yaxis:{...BL.yaxis,title:LANG==='es'?'% firmas en pérdida':'% firms in loss',range:[0,106]},
-    shapes:[{type:'line',x0:ivaRate*100,x1:ivaRate*100,y0:0,y1:1,yref:'paper',line:{color:'#c0392b',width:1.5,dash:'dash'}}]},CFG);
-
-  const types=['I_Viable','II_Precaria','III_Atrapada_deuda','IV_Riesgo_critico'];
-  const scT=types.map(tp=>{const sub=d.filter(r=>r.typology===tp);
-    return {name:tl(tp),x:sub.map(r=>r.net_income_adjusted),y:sub.map(r=>r.net_income_adjusted-r.total_revenue_diary*ivaRate),
-      mode:'markers',marker:{color:TC[tp],size:5,opacity:0.65},
-      hovertemplate:`${tl(tp)}<br>Pre: Bs %{x:.0f}<br>Post: Bs %{y:.0f}<extra></extra>`};
-  });
-  const limv=d.map(r=>r.net_income_adjusted).filter(isFinite);
-  const lim=Math.max(Math.abs(Math.min(...limv)),Math.max(...limv));
-  scT.push({x:[-lim,lim],y:[-lim,lim],mode:'lines',name:'45°',line:{color:'#ccc',dash:'dot',width:1},hoverinfo:'skip'});
-  Plotly.newPlot('chart-iva-scatter',scT,{...BL,showlegend:true,legend:{x:0.02,y:0.98,font:{size:9}},
-    xaxis:{...BL.xaxis,title:LANG==='es'?'Gan. aj. pre-IVA (Bs/sem)':'Pre-IVA adj. profit (Bs/wk)',zeroline:true,zerolinewidth:1.5},
-    yaxis:{...BL.yaxis,title:LANG==='es'?'Gan. aj. post-IVA (Bs/sem)':'Post-IVA adj. profit (Bs/wk)',zeroline:true,zerolinewidth:1.5}},CFG);
-}
-
-// ══════════════════════════════════════════════════════════
-// TABLE
-// ══════════════════════════════════════════════════════════
-function typeBadge(tp){
-  const cls=tp==='I_Viable'?'viable':tp==='II_Precaria'?'precaria':tp==='IV_Riesgo_critico'?'critica':'atrapada';
-  return `<span class="badge badge-${cls}">${tl(tp).replace(/^[IVX]+\s—\s/,'')}</span>`;
-}
-function fmtBs(v){if(!isFinite(v))return'—';const c=v<0?'neg':'pos';return`<span class="${c}">Bs ${Math.round(v).toLocaleString()}</span>`;}
-function fmtN(v,dec=1){return isFinite(v)?v.toFixed(dec):'—';}
-
-function renderTable(){
-  const cols=[
-    {key:'firm_id',l:'th-id'},{key:'sector_en',l:'th-sector'},{key:'city',l:'th-city'},{key:'gender',l:'th-gender'},
-    {key:'typology',l:'th-type'},{key:'owner_hours_weekly',l:'th-hrs'},{key:'total_revenue_diary',l:'th-rev'},
-    {key:'net_income_conventional',l:'th-conv'},{key:'net_income_adjusted',l:'th-adj'},
-    {key:'labor_imputed',l:'th-lab'},{key:'cash_flow_operating',l:'th-cf'},
-    {key:'interest_burden_pct',l:'th-int'},{key:'mw_multiple',l:'th-mw'},
-  ];
-  document.getElementById('table-head').innerHTML=cols.map(c=>
-    `<th onclick="sortTable('${c.key}')">${t(c.l)} ${sortCol===c.key?(sortAsc?'↑':'↓'):''}</th>`).join('');
-  const sorted=[...filteredData].sort((a,b)=>{const va=a[sortCol],vb=b[sortCol];if(typeof va==='string')return sortAsc?va.localeCompare(vb):vb.localeCompare(va);return sortAsc?va-vb:vb-va;});
-  document.getElementById('table-body').innerHTML=sorted.slice(0,100).map(r=>`
-    <tr>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:0.71rem">${r.firm_id}</td>
-      <td>${r.sector_en}</td><td>${r.city}</td><td>${r.gender}</td><td>${typeBadge(r.typology)}</td>
-      <td>${r.owner_hours_weekly}</td><td>Bs ${Math.round(r.total_revenue_diary).toLocaleString()}</td>
-      <td>${fmtBs(r.net_income_conventional)}</td><td>${fmtBs(r.net_income_adjusted)}</td>
-      <td>${fmtBs(r.labor_imputed)}</td><td>${fmtBs(r.cash_flow_operating)}</td>
-      <td>${fmtN(r.interest_burden_pct)}%</td><td>${fmtN(r.mw_multiple,2)}×</td>
-    </tr>`).join('')
-    +(sorted.length>100?`<tr><td colspan="13" style="text-align:center;color:#bbb;font-style:italic;padding:0.7rem">${t('table-more')(100,sorted.length)}</td></tr>`:'');
-}
-function sortTable(col){if(sortCol===col)sortAsc=!sortAsc;else{sortCol=col;sortAsc=true;}renderTable();}
-
-// ══════════════════════════════════════════════════════════
-// NAV HIGHLIGHT
-// ══════════════════════════════════════════════════════════
-function setupNav(){
-  const secs=document.querySelectorAll('.section-block');
-  const navs=document.querySelectorAll('.nav-item');
-  new IntersectionObserver(entries=>{
-    entries.forEach(e=>{if(e.isIntersecting){
-      navs.forEach(n=>n.classList.remove('active'));
-      const a=document.querySelector(`.nav-item[href="#${e.target.id}"]`);
-      if(a){a.classList.add('active');a.scrollIntoView({block:'nearest',inline:'center'});}
-    }});
-  },{rootMargin:'-25% 0px -65% 0px'}).observe||secs.forEach(s=>{}); // fallback
-  const obs=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{if(e.isIntersecting){
-      navs.forEach(n=>n.classList.remove('active'));
-      const a=document.querySelector(`.nav-item[href="#${e.target.id}"]`);
-      if(a){a.classList.add('active');a.scrollIntoView({block:'nearest',inline:'center'});}
-    }});
-  },{rootMargin:'-25% 0px -65% 0px'});
-  secs.forEach(s=>obs.observe(s));
-}
-
-// ══════════════════════════════════════════════════════════
-// RENDER ALL
-// ══════════════════════════════════════════════════════════
-function renderAll(){
-  renderStats(); renderDist(); renderSectorPct(); renderWaterfall(); renderTypologySector();
-  renderScatter(); renderPersistence(); renderSurveyVsDiary(); renderRatios(); renderIVA(); renderTable();
-}
-
-// ══════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════
-async function init(){
-  try {
-    rawData=await loadData(); filteredData=rawData;
-    document.getElementById('loading').style.display='none';
-    setupNav(); renderAll();
-  } catch(e){
-    document.getElementById('loading').innerHTML=`<div style="text-align:center;font-family:'IBM Plex Mono',monospace;color:#c0392b"><div style="font-size:2rem;margin-bottom:1rem">⚠</div><div>Could not load data.</div><div style="margin-top:0.5rem;font-size:0.78rem;color:#888">Run locally: <code>python -m http.server 8000</code></div></div>`;
-  }
-}
-init();
-</script>
 </body>
 </html>
