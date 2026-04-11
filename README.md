@@ -1,12 +1,43 @@
-# Ledgers of the Self-Employed
-## Accounting for the Invisible Firm — Bolivia 2025
+# Bolivia Informality Research
+## Financial Diary Data & the Cash Flow Trap
 
 [![Dashboard](https://img.shields.io/badge/Dashboard-Live-red)](https://wernerhl.github.io/ledgers-bolivia)
-[![Paper](https://img.shields.io/badge/Paper-Working%20Draft-blue)](https://github.com/wernerhl/ledgers-bolivia/raw/main/paper/ledgers_paper.pdf)
+[![Dataverse](https://img.shields.io/badge/Harvard-Dataverse-blue)](https://doi.org/10.7910/DVN/KZMHGU)
 
-> *"Standard household surveys report positive profits for virtually every self-employed worker in the developing world. Using a seven-day financial diary with full double-entry accounting administered to 300 informal firms across four Bolivian cities, we show that 57 percent are loss-making once owner labour, depreciation, and informal debt are correctly accounted for."*
-> 
-> — Hernani-Limarino (2026)
+> *"43 percent of informal firms are loss-making after imputing owner labor at shadow wage—yet 97% have positive cash flow. The 'cash flow veil' explains persistence: owners observe cash, not economic profit."*
+
+---
+
+## 📊 Key Findings
+
+| Statistic | Value |
+|-----------|-------|
+| Firms | 500 |
+| Transactions | 25,338 |
+| Loss-making (π_adj ≤ 0) | 42.8% |
+| Type C (trapped) share of loss-makers | 70.1% |
+| ALMP mistargeting ratio | 2.96:1 |
+| Median accounting gap | Bs 1,002/week |
+
+---
+
+## 📄 Papers
+
+### Ledgers of the Self-Employed: Accounting for the Invisible Firm
+*Measurement Companion*
+
+Using a seven-day double-entry financial diary, we construct complete income statements, balance sheets, and going-concern valuations for 500 informal firms. The median accounting gap—Bs 1,002/week—is driven 88% by imputed labor.
+
+- [Paper (EN)](https://wernerhl.github.io/ledgers-bolivia/docs/ledgers_v2.pdf) · [Paper (ES)](https://wernerhl.github.io/ledgers-bolivia/docs/ledgers_v2_es.pdf)
+- [Slides (EN)](https://wernerhl.github.io/ledgers-bolivia/docs/presentation_en.pdf) · [Slides (ES)](https://wernerhl.github.io/ledgers-bolivia/docs/presentation_es.pdf)
+
+### Trapped by Cash: A Theory of Voluntary Informality Among the Economically Non-Viable
+*Theory + Empirics*
+
+Why do loss-making informal firms persist? Standard models assume rationing. This paper proposes a different mechanism: the cash flow veil. Owners observe cash flow, not economic profit. Among loss-makers, 70% would decline a formal job offer because CF ≥ w*.
+
+- [Paper](https://wernerhl.github.io/ledgers-bolivia/docs/trapped_by_cash.pdf)
+- [Slides (60 min)](https://wernerhl.github.io/ledgers-bolivia/docs/trapped_slides.pdf)
 
 ---
 
@@ -14,53 +45,42 @@
 
 **[→ Open Dashboard](https://wernerhl.github.io/ledgers-bolivia)**
 
-The dashboard covers 8 analytical modules:
+Explore both firm typologies:
 
-| § | Module | What you can explore |
-|---|--------|---------------------|
-| 1 | Headline statistics | Key aggregates, filterable by sector/city/gender/typology |
-| 2 | The Profit Reversal | Distribution shift, sector comparisons, waterfall decomposition |
-| 3 | Firm Map | Every firm in profit × debt-burden space, color-coded by typology |
-| 4 | Persistence Mechanisms | Why loss-making firms survive: cash flow, hourly returns, household draws |
-| 5 | Survey vs Diary | EH vs diary income, bias direction by sector |
-| 6 | Financial Ratios | ROA, Tobin's Q, effective annual interest rates by lender type |
-| 7 | Tax Simulator | Slide the IVA rate and see how many firms are pushed into loss |
-| 8 | Firm Explorer | Sortable table of all 300 firms |
+| Ledgers: Viability × Debt | Trapped: Viability × Cash Flow |
+|---------------------------|-------------------------------|
+| I — Viable (55.6%) | A — Viable (56.8%) |
+| II — Precaria (34.4%) | B — Rationed (0.4%) |
+| III — Debt-trapped (1.6%) | C — Trapped (30.0%) |
+| IV — Critical (8.4%) | D — ALMP Target (12.8%) |
 
 ---
 
-## 📊 Data
+## 📊 Data & Replication
 
-All data are **simulated** to match the statistical properties of a seven-day financial diary study. Real data collection is ongoing. The simulation preserves:
-- Sector and city stratification
-- True debt prevalence (46%) vs EH-declared (3%)
-- Labour imputation structure (owner hours + family hours × shadow wage)
-- Household-firm boundary flows (Module 7)
-- Dual-currency exposure (88% of firms, 7.1% of sales in USD)
+| Source | Link |
+|--------|------|
+| Harvard Dataverse | [doi.org/10.7910/DVN/KZMHGU](https://doi.org/10.7910/DVN/KZMHGU) |
+| GitHub | [github.com/wernerhl/ledgers-bolivia](https://github.com/wernerhl/ledgers-bolivia) |
 
 ### Files
 
-| File | Description | Rows | Cols |
-|------|-------------|------|------|
-| `data/ledgers_dashboard_data.csv` | Firm-level panel (key variables) | 300 | 56 |
-| `data/ledgers_analytics.csv` | Full analytics panel (all variables) | 300 | 142 |
-| `data/ledgers_transactions.csv` | Transaction-level records | 14,902 | 18 |
-| `data/ledgers_firms.csv` | Firm metadata | 300 | 15 |
+| File | Description | Rows |
+|------|-------------|------|
+| `data/ledgers_firms.csv` | Firm-level data | 500 |
+| `data/ledgers_transactions.csv` | Transaction-level records | 25,338 |
+| `data/ledgers_analytics.csv` | Full analytics panel | 500 |
 
 ### Key Variables
 
 | Variable | Description |
 |----------|-------------|
-| `net_income_conventional` | Survey-implied weekly profit (no labour/depreciation adjustment) |
-| `net_income_adjusted` | Diary-adjusted profit after A1–A4 entries |
-| `accounting_gap_bs` | Gap = conventional − adjusted (always ≥ 0) |
-| `labor_imputed` | Owner + family labour × shadow wage (Bs 13.64/hr) |
-| `cash_flow_operating` | Operating cash flow (always positive) |
-| `typology` | I\_Viable / II\_Precaria / III\_Atrapada\_deuda / IV\_Riesgo\_critico |
-| `tobin_q_g0` | Going-concern PV / book assets (viable firms, g=0) |
-| `effective_annual_rate` | True EAR on debt (IFD ~25%, prestamista ~201%) |
-| `mw_multiple` | Hourly adjusted return / minimum wage (< 1 = below min. wage) |
-| `household_draws` | Weekly household extraction from firm cash |
+| `net_income_conventional` | Cash flow (π_conv) |
+| `net_income_adjusted` | Economic profit (π_adj) |
+| `accounting_gap_bs` | Gap = π_conv − π_adj |
+| `labor_imputed` | Owner + family labor × shadow wage |
+| `typology_ledgers` | I/II/III/IV (viability × debt) |
+| `typology_trapped` | A/B/C/D (viability × cash flow) |
 
 ---
 
@@ -68,38 +88,22 @@ All data are **simulated** to match the statistical properties of a seven-day fi
 
 ```
 ledgers-bolivia/
-├── index.html              # Interactive dashboard (GitHub Pages)
+├── index.html              # Interactive dashboard
+├── docs/
+│   ├── ledgers_v2.pdf      # Ledgers paper (EN)
+│   ├── ledgers_v2_es.pdf   # Ledgers paper (ES)
+│   ├── presentation_en.pdf # Ledgers slides (EN)
+│   ├── presentation_es.pdf # Ledgers slides (ES)
+│   ├── trapped_by_cash.pdf # Trapped paper
+│   └── trapped_slides.pdf  # Trapped slides
 ├── data/
-│   ├── ledgers_dashboard_data.csv
-│   ├── ledgers_analytics.csv
+│   ├── ledgers_firms.csv
 │   ├── ledgers_transactions.csv
-│   └── ledgers_firms.csv
+│   └── ledgers_analytics.csv
 ├── code/
-│   ├── simulate_diary.py   # Data simulation engine (300 firms × 7 days)
-│   ├── ledgers_analytics.py # Full analytics pipeline
-│   └── paper_illustrations.py # Publication figures
-├── paper/
-│   └── ledgers_paper.pdf   # Working paper
+│   ├── ledgers_analytics.py
+│   └── paper_illustrations.py
 └── README.md
-```
-
----
-
-## 🛠️ Run Locally
-
-```bash
-git clone https://github.com/wernerhl/ledgers-bolivia
-cd ledgers-bolivia
-python -m http.server 8000
-# open http://localhost:8000
-```
-
-To reproduce the analytics:
-```bash
-pip install pandas numpy matplotlib scipy
-python code/simulate_diary.py      # generates raw data
-python code/ledgers_analytics.py   # computes all firm-level metrics
-python code/paper_illustrations.py # generates paper figures
 ```
 
 ---
@@ -107,38 +111,38 @@ python code/paper_illustrations.py # generates paper figures
 ## 📐 Methodology
 
 ### The Diary Protocol
-Seven-day financial diary with nine modules administered daily by trained enumerators. All monetary amounts in bolivianos (Bs); USD transactions additionally recorded with P2P exchange rate.
+Seven-day double-entry financial diary administered to 500 informal owner-operated firms across six sectors (Commerce, Transport, Manufacturing, Food Service, Construction, Professional Services) and four cities (La Paz/El Alto, Cochabamba, Santa Cruz, Tarija). September–October 2024.
 
-### Double-Entry Accounting
-Every transaction coded with debit and credit account from a structured chart of accounts. Four adjustment entries (A1–A4) applied ex post:
+### Accounting Gap Decomposition
 
-| Entry | Item | Basis |
-|-------|------|-------|
-| A1 | Depreciation | Asset value ÷ (52 × useful life years) |
-| A2 | Owner labour | Hours × min(min. wage, WTA elicited) |
-| A3 | Family labour | Hours × 0.85 × shadow wage |
-| A4 | Own-consumption | Replacement cost of household draws from inventory |
+| Component | Share of Gap |
+|-----------|-------------|
+| Imputed owner labor | 61% |
+| Imputed family labor | 31% |
+| Depreciation | 12% |
+| **Total** | 100% |
 
-### Typology
-| Type | Condition | N | % |
-|------|-----------|---|---|
-| I — Viable | π_adj > 0, interest burden < 10% | 126 | 42% |
-| II — Precaria | π_adj ≤ 0, interest burden < 10% | 147 | 49% |
-| III — Debt-trapped | π_adj > 0, interest burden ≥ 10% | 3 | 1% |
-| IV — Critical risk | π_adj ≤ 0, interest burden ≥ 10% | 24 | 8% |
+Shadow wage: Bs 13.64/hour (Mincer regression on formal sector)
 
 ---
 
 ## 📖 Citation
 
 ```bibtex
-@techreport{HernaniLimarino2026,
+@techreport{HernaniLimarino2026Ledgers,
   author  = {Hernani-Limarino, Werner},
   title   = {Ledgers of the Self-Employed: Accounting for the Invisible Firm},
   year    = {2026},
-  institution = {IA Analytics},
   type    = {Working Paper},
-  note    = {Available at: https://github.com/wernerhl/ledgers-bolivia}
+  note    = {Data: https://doi.org/10.7910/DVN/KZMHGU}
+}
+
+@techreport{HernaniLimarino2026Trapped,
+  author  = {Hernani-Limarino, Werner},
+  title   = {Trapped by Cash: A Theory of Voluntary Informality Among the Economically Non-Viable},
+  year    = {2026},
+  type    = {Working Paper},
+  note    = {Data: https://doi.org/10.7910/DVN/KZMHGU}
 }
 ```
 
@@ -146,6 +150,6 @@ Every transaction coded with debit and credit account from a structured chart of
 
 ## 📬 Contact
 
-Werner Hernani-Limarino · [wernerhl@gmail.com](mailto:wernerhl@gmail.com)
+Werner Hernani-Limarino · [wernerhl@gmail.com](mailto:wernerhl@gmail.com) · [wernerhl.github.io](https://wernerhl.github.io)
 
-*The opinions expressed in this paper do not reflect the position of any affiliated institution. All errors are the author's.*
+*The opinions expressed do not reflect the position of affiliated institutions. All errors are the author's.*

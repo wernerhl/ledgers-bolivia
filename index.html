@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ledgers of the Self-Employed | Bolivia Financial Diary</title>
+    <title>Bolivia Informality Research | Financial Diary Data</title>
     <style>
         :root {
             --bg: #0a0a0a;
@@ -12,6 +12,10 @@
             --muted: #737373;
             --border: #262626;
             --card-bg: #141414;
+            --green: #22c55e;
+            --red: #ef4444;
+            --amber: #f59e0b;
+            --blue: #3b82f6;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -22,12 +26,12 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 4rem 2rem;
         }
         header {
-            margin-bottom: 4rem;
+            margin-bottom: 3rem;
             border-bottom: 1px solid var(--border);
             padding-bottom: 2rem;
         }
@@ -52,9 +56,9 @@
         }
         .stat-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1.5rem;
-            margin: 3rem 0;
+            margin: 2rem 0 3rem 0;
         }
         .stat-card {
             background: var(--card-bg);
@@ -67,7 +71,9 @@
             font-weight: 300;
             color: var(--accent);
         }
-        .stat-value.red { color: #ef4444; }
+        .stat-value.red { color: var(--red); }
+        .stat-value.green { color: var(--green); }
+        .stat-value.amber { color: var(--amber); }
         .stat-label {
             font-size: 0.875rem;
             color: var(--muted);
@@ -86,31 +92,58 @@
             border-bottom: 1px solid var(--border);
             padding-bottom: 0.5rem;
         }
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin: 2rem 0 1rem 0;
+            color: var(--accent);
+        }
         p {
             margin-bottom: 1rem;
             color: #a3a3a3;
         }
-        .downloads {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-        .download-card {
+        .paper-block {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            padding: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .paper-title {
+            font-size: 1.3rem;
+            font-style: italic;
+            margin-bottom: 0.5rem;
+        }
+        .paper-status {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+        .paper-abstract {
+            font-size: 0.95rem;
+            color: #a3a3a3;
+            margin-bottom: 1.5rem;
+        }
+        .downloads {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .download-card {
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            padding: 1rem;
             text-decoration: none;
             color: var(--text);
             transition: border-color 0.2s, background 0.2s;
+            font-size: 0.9rem;
         }
         .download-card:hover {
             border-color: var(--accent);
-            background: #1a1a2e;
+            background: #252540;
         }
         .download-title {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
         }
         .download-meta {
             font-size: 0.8rem;
@@ -118,34 +151,63 @@
         }
         .lang-tag {
             display: inline-block;
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
             background: var(--border);
             border-radius: 3px;
             margin-left: 0.5rem;
             text-transform: uppercase;
         }
+        .typology-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .typology-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+        }
+        .typology-panel h4 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            font-weight: 400;
+        }
         .typology {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin: 2rem 0;
+            gap: 0.75rem;
         }
         .type-card {
-            padding: 1rem;
+            padding: 0.75rem;
             border: 1px solid var(--border);
+            font-size: 0.9rem;
         }
-        .type-card.viable { border-left: 4px solid #22c55e; }
-        .type-card.precaria { border-left: 4px solid #ef4444; }
-        .type-card.atrapada { border-left: 4px solid #f59e0b; }
-        .type-card.critico { border-left: 4px solid #dc2626; }
+        .type-card.green { border-left: 3px solid var(--green); }
+        .type-card.red { border-left: 3px solid var(--red); }
+        .type-card.amber { border-left: 3px solid var(--amber); }
+        .type-card.blue { border-left: 3px solid var(--blue); }
         .type-name {
             font-weight: 600;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.15rem;
+            font-size: 0.85rem;
         }
         .type-pct {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: var(--muted);
+        }
+        .type-desc {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 0.25rem;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
         }
         footer {
             margin-top: 4rem;
@@ -158,13 +220,44 @@
             color: var(--accent);
             text-decoration: none;
         }
+        .key-finding {
+            background: linear-gradient(135deg, #1a1a2e 0%, #141414 100%);
+            border-left: 3px solid var(--red);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .key-finding strong {
+            color: var(--text);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        table tr {
+            border-bottom: 1px solid var(--border);
+        }
+        table td {
+            padding: 0.75rem 0;
+        }
+        table td:first-child {
+            color: var(--muted);
+        }
+        table td:last-child {
+            text-align: right;
+        }
+        @media (max-width: 768px) {
+            .typology-container {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Ledgers of the Self-Employed</h1>
-            <p class="subtitle">Accounting for the Invisible Firm</p>
+            <h1>Bolivia Informality Research</h1>
+            <p class="subtitle">Financial Diary Data &amp; the Cash Flow Trap</p>
             <p class="author">Werner Hernani-Limarino · <a href="mailto:wernerhl@gmail.com">wernerhl@gmail.com</a></p>
         </header>
 
@@ -182,95 +275,226 @@
                 <div class="stat-label">Loss-making</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">5.7</div>
-                <div class="stat-label">Tobin's Q</div>
+                <div class="stat-value amber">70%</div>
+                <div class="stat-label">Type C (Trapped)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value green">2.96</div>
+                <div class="stat-label">Mistargeting Ratio</div>
             </div>
         </div>
 
         <section>
-            <h2>Abstract</h2>
+            <h2>Research Program</h2>
             <p>
-                Informal firms possess invisible capital—location rents, client networks, accumulated 
-                know-how—that never appears on a balance sheet and cannot be recovered from a household 
-                survey. Using a seven-day double-entry financial diary administered to 500 informal firms 
-                across Bolivia (25,338 transaction records), we construct complete income statements, 
-                balance sheets, and going-concern valuations.
+                Bolivia has the highest informality rate in Latin America—85% of workers, 62% of GDP. 
+                This research program uses a purpose-built financial diary administered to 500 informal 
+                firms across six sectors and four cities (La Paz/El Alto, Cochabamba, Santa Cruz, Tarija) 
+                to understand why loss-making firms persist.
             </p>
-            <p>
-                The central finding: <strong>43 percent of informal firms are loss-making</strong> after 
-                imputing owner and family labor at minimum wage and depreciation at sector-specific rates. 
-                The median accounting gap—Bs 1,002/week—is driven 88% by imputed labor. These loss-making 
-                firms persist because operating cash flow remains positive: 98% generate cash weekly, 
-                masking the accounting loss.
-            </p>
+            <div class="key-finding">
+                <strong>Central finding:</strong> 43% of informal firms are loss-making after imputing 
+                owner labor at shadow wage—yet 97% have positive cash flow. The "cash flow veil" explains 
+                persistence: owners observe cash, not economic profit. Among loss-makers, 70% would 
+                decline a formal job offer because their cash flow exceeds the formal wage. Active labor 
+                market programs targeting informal workers are mistargeted 2.96:1.
+            </div>
         </section>
 
+        <!-- PAPERS -->
         <section>
-            <h2>Firm Typology</h2>
-            <div class="typology">
-                <div class="type-card viable">
-                    <div class="type-name">I — Viable</div>
-                    <div class="type-pct">55.6%</div>
-                    <p>Profit > 0, low debt burden</p>
+            <h2>Papers</h2>
+            
+            <div class="paper-block">
+                <div class="paper-title">Ledgers of the Self-Employed: Accounting for the Invisible Firm</div>
+                <div class="paper-status">Working Paper · Measurement Companion</div>
+                <p class="paper-abstract">
+                    Using a seven-day double-entry financial diary, we construct complete income statements, 
+                    balance sheets, and going-concern valuations for 500 informal firms. The median accounting 
+                    gap—Bs 1,002/week—is driven 88% by imputed labor. Median Tobin's Q for viable firms is 5.7, 
+                    implying going-concern values far exceed liquidation values. True debt prevalence is 49% 
+                    vs. 7% detected by household surveys.
+                </p>
+                <div class="downloads">
+                    <a href="docs/ledgers_v2.pdf" class="download-card">
+                        <div class="download-title">Paper <span class="lang-tag">EN</span></div>
+                        <div class="download-meta">Full paper (31 pages)</div>
+                    </a>
+                    <a href="docs/ledgers_v2_es.pdf" class="download-card">
+                        <div class="download-title">Artículo <span class="lang-tag">ES</span></div>
+                        <div class="download-meta">Versión completa (22 páginas)</div>
+                    </a>
+                    <a href="docs/presentation_en.pdf" class="download-card">
+                        <div class="download-title">Slides <span class="lang-tag">EN</span></div>
+                        <div class="download-meta">60-minute presentation</div>
+                    </a>
+                    <a href="docs/presentation_es.pdf" class="download-card">
+                        <div class="download-title">Presentación <span class="lang-tag">ES</span></div>
+                        <div class="download-meta">60 minutos</div>
+                    </a>
                 </div>
-                <div class="type-card precaria">
-                    <div class="type-name">II — Precaria</div>
-                    <div class="type-pct">34.4%</div>
-                    <p>Profit ≤ 0, low debt burden</p>
-                </div>
-                <div class="type-card atrapada">
-                    <div class="type-name">III — Debt-trapped</div>
-                    <div class="type-pct">1.6%</div>
-                    <p>Profit > 0, high debt burden</p>
-                </div>
-                <div class="type-card critico">
-                    <div class="type-name">IV — Critical Risk</div>
-                    <div class="type-pct">8.4%</div>
-                    <p>Profit ≤ 0, high debt burden</p>
+            </div>
+
+            <div class="paper-block">
+                <div class="paper-title">Trapped by Cash: A Theory of Voluntary Informality Among the Economically Non-Viable</div>
+                <div class="paper-status">Working Paper · Theory + Empirics</div>
+                <p class="paper-abstract">
+                    Why do loss-making informal firms persist? Standard models assume rationing: formal jobs 
+                    are scarce. This paper proposes a different mechanism for 70% of loss-makers: the cash flow 
+                    veil. Owners observe cash flow, not economic profit. If cash flow exceeds the formal wage, 
+                    they decline formal offers—even while losing money. I develop a model with dual embedded 
+                    capital (productive vs. relational) and show it generates a mass of persistent loss-makers 
+                    in equilibrium. ALMP mistargeting ratio: 2.96:1.
+                </p>
+                <div class="downloads">
+                    <a href="docs/trapped_by_cash.pdf" class="download-card">
+                        <div class="download-title">Paper <span class="lang-tag">EN</span></div>
+                        <div class="download-meta">Full paper (55 pages)</div>
+                    </a>
+                    <a href="docs/trapped_slides.pdf" class="download-card">
+                        <div class="download-title">Slides <span class="lang-tag">EN</span></div>
+                        <div class="download-meta">60-minute presentation (40 slides)</div>
+                    </a>
                 </div>
             </div>
         </section>
 
+        <!-- TYPOLOGIES -->
         <section>
-            <h2>Downloads</h2>
-            <div class="downloads">
-                <a href="docs/ledgers_v2.pdf" class="download-card">
-                    <div class="download-title">Full Paper <span class="lang-tag">EN</span></div>
-                    <div class="download-meta">Ledgers of the Self-Employed: Accounting for the Invisible Firm</div>
-                </a>
-                <a href="docs/ledgers_v2_es.pdf" class="download-card">
-                    <div class="download-title">Artículo Completo <span class="lang-tag">ES</span></div>
-                    <div class="download-meta">Contabilidad de los Cuenta Propia: Libros de la Empresa Invisible</div>
-                </a>
-                <a href="docs/presentation_en.pdf" class="download-card">
-                    <div class="download-title">Presentation <span class="lang-tag">EN</span></div>
-                    <div class="download-meta">60-minute slides (33 slides)</div>
-                </a>
-                <a href="docs/presentation_es.pdf" class="download-card">
-                    <div class="download-title">Presentación <span class="lang-tag">ES</span></div>
-                    <div class="download-meta">60 minutos (35 slides)</div>
-                </a>
+            <h2>Firm Typologies</h2>
+            <div class="typology-container">
+                <div class="typology-panel">
+                    <h4>Ledgers Paper: Viability × Debt</h4>
+                    <div class="typology">
+                        <div class="type-card green">
+                            <div class="type-name">I — Viable</div>
+                            <div class="type-pct">55.6%</div>
+                            <div class="type-desc">Profit > 0, low debt</div>
+                        </div>
+                        <div class="type-card red">
+                            <div class="type-name">II — Precaria</div>
+                            <div class="type-pct">34.4%</div>
+                            <div class="type-desc">Profit ≤ 0, low debt</div>
+                        </div>
+                        <div class="type-card amber">
+                            <div class="type-name">III — Debt-trapped</div>
+                            <div class="type-pct">1.6%</div>
+                            <div class="type-desc">Profit > 0, high debt</div>
+                        </div>
+                        <div class="type-card red">
+                            <div class="type-name">IV — Critical</div>
+                            <div class="type-pct">8.4%</div>
+                            <div class="type-desc">Profit ≤ 0, high debt</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="typology-panel">
+                    <h4>Trapped Paper: Viability × Cash Flow</h4>
+                    <div class="typology">
+                        <div class="type-card green">
+                            <div class="type-name">A — Viable</div>
+                            <div class="type-pct">56.8%</div>
+                            <div class="type-desc">π<sub>adj</sub> > 0, CF ≥ w*</div>
+                        </div>
+                        <div class="type-card blue">
+                            <div class="type-name">B — Rationed</div>
+                            <div class="type-pct">0.4%</div>
+                            <div class="type-desc">π<sub>adj</sub> > 0, CF < w*</div>
+                        </div>
+                        <div class="type-card red">
+                            <div class="type-name">C — Trapped</div>
+                            <div class="type-pct">30.0%</div>
+                            <div class="type-desc">π<sub>adj</sub> ≤ 0, CF ≥ w*</div>
+                        </div>
+                        <div class="type-card amber">
+                            <div class="type-name">D — ALMP Target</div>
+                            <div class="type-pct">12.8%</div>
+                            <div class="type-desc">π<sub>adj</sub> ≤ 0, CF < w*</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
+        <!-- DATA & REPLICATION -->
         <section>
-            <h2>Data & Replication</h2>
-            <div class="downloads">
+            <h2>Data &amp; Replication</h2>
+            <p>
+                Full replication package includes: firm-level data (500 obs), transaction-level data 
+                (25,338 obs), accounts data, codebooks, and all analysis scripts in Python.
+            </p>
+            <div class="data-grid">
                 <a href="https://doi.org/10.7910/DVN/KZMHGU" class="download-card" target="_blank">
                     <div class="download-title">Harvard Dataverse</div>
-                    <div class="download-meta">Full replication package: data, codebooks, scripts</div>
+                    <div class="download-meta">Replication package: data, codebooks, scripts</div>
                 </a>
                 <a href="https://github.com/wernerhl/ledgers-bolivia" class="download-card" target="_blank">
                     <div class="download-title">GitHub Repository</div>
-                    <div class="download-meta">Source code and documentation</div>
+                    <div class="download-meta">Source code, documentation, this dashboard</div>
+                </a>
+                <a href="data/ledgers_firms.csv" class="download-card">
+                    <div class="download-title">Firms Data</div>
+                    <div class="download-meta">ledgers_firms.csv (500 firms)</div>
+                </a>
+                <a href="data/ledgers_transactions.csv" class="download-card">
+                    <div class="download-title">Transactions Data</div>
+                    <div class="download-meta">ledgers_transactions.csv (25,338 rows)</div>
                 </a>
             </div>
+        </section>
+
+        <!-- KEY STATISTICS TABLE -->
+        <section>
+            <h2>Key Statistics</h2>
+            <table>
+                <tr>
+                    <td>Loss-making firms (π<sub>adj</sub> ≤ 0)</td>
+                    <td>42.8% (214/500)</td>
+                </tr>
+                <tr>
+                    <td>Loss-makers with positive cash flow</td>
+                    <td>97.2%</td>
+                </tr>
+                <tr>
+                    <td>Type C share of loss-makers (at w* = 546)</td>
+                    <td>70.1%</td>
+                </tr>
+                <tr>
+                    <td>Median accounting gap</td>
+                    <td>Bs 1,002/week</td>
+                </tr>
+                <tr>
+                    <td>Gap composition: imputed labor</td>
+                    <td>92% (owner 61%, family 31%)</td>
+                </tr>
+                <tr>
+                    <td>Gap composition: depreciation</td>
+                    <td>12%</td>
+                </tr>
+                <tr>
+                    <td>Median Tobin's Q (viable firms)</td>
+                    <td>5.7</td>
+                </tr>
+                <tr>
+                    <td>True debt prevalence vs. survey-detected</td>
+                    <td>49.2% vs. 6.9%</td>
+                </tr>
+                <tr>
+                    <td>ALMP mistargeting ratio (Type C / Type D)</td>
+                    <td>2.96:1</td>
+                </tr>
+                <tr>
+                    <td>Shadow wage used</td>
+                    <td>Bs 13.64/hour</td>
+                </tr>
+            </table>
         </section>
 
         <footer>
             <p>The opinions expressed do not reflect the position of affiliated institutions. All errors are the author's.</p>
             <p style="margin-top: 1rem;">
                 <a href="https://wernerhl.github.io">wernerhl.github.io</a> · 
+                <a href="https://wernerhl.github.io/research.html">Research</a> ·
                 <a href="mailto:wernerhl@gmail.com">wernerhl@gmail.com</a>
             </p>
         </footer>
